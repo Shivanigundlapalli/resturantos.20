@@ -272,7 +272,7 @@ Built with 💚 by **Team Prompt Orchestrators** for the AI Hackathon:
 | 👩‍💻 **Thanuja** | AI Agent Integration · System Architecture |
 | 👩‍💻 **Shivani Gundlapalli** | Frontend & Backend Development · Razorpay Integration · UI/UX Design · API Development |
 | 👩‍💻 **Akshitha Kota** | Website Testing · Quality Assurance |
-| 👩‍💻 **Srija Reddy Mamidi** | Testing |
+| 👩‍💻 **Srija Reddy Mamidi** | Frontend Architecture · Testing |
 
 ---
 
