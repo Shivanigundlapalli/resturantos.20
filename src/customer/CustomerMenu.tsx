@@ -3,6 +3,7 @@ import { Search, ShoppingBag, Plus, Minus, Loader2, ArrowLeft, ChevronRight, X, 
 import { motion, AnimatePresence } from "motion/react";
 import { MenuItem } from "../types";
 import { CartItem } from "./CustomerApp";
+import { supabase } from "../lib/supabaseClient";
 
 interface CustomerMenuProps {
   cart: CartItem[];
@@ -20,23 +21,44 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [customizations, setCustomizations] = useState<{ [key: string]: string }>({});
 
+  const fetchMenu = async () => {
+    try {
+      const res = await fetch("/api/menu");
+      const result = await res.json();
+      if (result.success && Array.isArray(result.data)) {
+        setMenuItems(result.data);
+      } else if (Array.isArray(result)) {
+        setMenuItems(result);
+      } else {
+        setMenuItems([]);
+      }
+    } catch (err) {
+      console.error("Failed to load menu", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch("/api/menu")
-      .then(res => res.json())
-      .then(data => {
-        setMenuItems(data);
-        setIsLoading(false);
+    fetchMenu();
+
+    if (!supabase) return;
+    const channel = supabase.channel('customer-menu-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        console.log("[Realtime] Menu changed, refetching...");
+        fetchMenu();
       })
-      .catch(err => {
-        console.error("Failed to load menu", err);
-        setIsLoading(false);
-      });
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const categories = Array.from(new Set(menuItems.map(item => item.category)));
+  const categories = Array.from(new Set(Array.isArray(menuItems) ? menuItems.map(item => item.category) : []));
   const isSearching = searchQuery.length > 0;
   
-  const displayedItems = menuItems.filter(item => {
+  const displayedItems = (Array.isArray(menuItems) ? menuItems : []).filter(item => {
     if (isSearching) {
       return item.name.toLowerCase().includes(searchQuery.toLowerCase());
     }
@@ -217,13 +239,13 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                         >
                           <div className="w-full h-48 bg-[#071A12] relative shrink-0">
                             <img 
-                              src={item.image || getDishImage(item.name, item.category)} 
+                              src={item.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80"} 
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover rounded-t-[24px]"
                               loading="lazy"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                const fallbackUrl = getDishImage(item.name, item.category);
+                                const fallbackUrl = "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80";
                                 if (target.src !== fallbackUrl) {
                                   target.src = fallbackUrl;
                                 }
@@ -258,12 +280,15 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                               <div className="flex justify-between items-start mb-1">
                                 <h3 className="font-bold text-[#F5F5F2] text-lg leading-tight">{item.name}</h3>
                               </div>
-                              <div className="flex items-center gap-1 mb-2">
-                                <div className="flex text-[#D4A53A] text-sm">
-                                  {"★★★★★"}
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex text-[#D4A53A] text-sm font-bold items-center gap-1">
+                                  <span>★</span> {item.popularity ? (item.popularity / 10).toFixed(1) : "4.5"}
                                 </div>
+                                <span className="text-xs text-[#869990] font-medium bg-[#071A12] px-2 py-0.5 rounded-md border border-[#1B3629]">
+                                  ⏱ {item.timing_slot || "15 mins"}
+                                </span>
                                 {item.calories && (
-                                  <span className="text-xs text-[#869990] font-medium ml-2 bg-[#071A12] px-2 py-0.5 rounded-md border border-[#1B3629]">{item.calories} kcal</span>
+                                  <span className="text-xs text-[#869990] font-medium bg-[#071A12] px-2 py-0.5 rounded-md border border-[#1B3629]">{item.calories} kcal</span>
                                 )}
                               </div>
                               <p className="text-sm text-[#C8C8C3] font-medium line-clamp-2 mb-4">{item.short_description || item.description || `Authentic ${item.category?.replace(/[^a-zA-Z ]/g, "").trim().toLowerCase()} dish prepared with fresh ingredients.`}</p>
@@ -307,7 +332,12 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                                   </button>
                                 )
                               ) : (
-                                <span className="text-xs font-black text-[#EF4444] uppercase bg-[#EF4444]/10 border border-[#EF4444]/20 px-3 py-1.5 rounded-lg">Sold Out</span>
+                                <button 
+                                  disabled
+                                  className="border border-[#1B3629] text-[#869990] bg-[#071A12] opacity-70 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider cursor-not-allowed"
+                                >
+                                  OUT OF STOCK
+                                </button>
                               )}
                             </div>
                           </div>

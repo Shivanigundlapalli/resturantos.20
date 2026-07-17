@@ -21,8 +21,9 @@ export default function MenuManagement() {
         menuRes.json(),
         catRes.json()
       ]);
-      setMenuItems(menuData);
-      setCategories(catData);
+      const items = menuData.success && Array.isArray(menuData.data) ? menuData.data : (Array.isArray(menuData) ? menuData : []);
+      setMenuItems(items);
+      setCategories(Array.isArray(catData) ? catData : []);
     } catch (err) {
       console.error(err);
     } finally {

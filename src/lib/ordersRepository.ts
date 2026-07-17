@@ -12,33 +12,15 @@ export class OrdersRepository {
       ORDER BY display_order ASC, name ASC
     `);
     
-    
     return res.rows.map(row => ({
       id: String(row.id),
       name: row.name,
-      category_id: String(row.category_id),
-      category: row.category_name || "Main Course",
-      price: row.price,
-      cost: row.cost || row.price * 0.4,
-      status: row.status || "Available",
-      popularity: row.popularity || 5,
-      description: "",
-      image: row.image_url,
-      short_description: "",
-      sub_category: "",
-      discounted_price: undefined,
-      gst_percentage: undefined,
-      calories: undefined,
-      spice_level: "",
-      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
-      isVeg: row.is_veg,
-      tags: [],
-      timing_slot: "",
-      stock_type: "",
-      current_stock: undefined,
-      addons: [],
-      removable_ingredients: [],
-      images: []
+      description: row.description || "",
+      image_url: row.image_url || "",
+      display_order: row.display_order || 0,
+      is_active: row.is_active !== false,
+      background_color: row.background_color || "#0A241C",
+      icon: row.icon || "Utensils"
     }));
 
   }
@@ -406,6 +388,20 @@ export class OrdersRepository {
         `, [newOrderId, item.menuItemId, item.quantity, item.price, item.quantity * item.price]);
       }
 
+      // Add to Kitchen Queue
+      await client.query(`
+        INSERT INTO kitchen_events (order_id, status)
+        VALUES ($1, $2)
+      `, [newOrderId, orderData.status]);
+
+      // Add to Finances if Paid
+      if (orderData.payment_status === "PAID" || orderData.payment_method === "ONLINE") {
+        await client.query(`
+          INSERT INTO finances (type, category, amount, description, created_at)
+          VALUES ($1, $2, $3, $4, NOW())
+        `, ["Income", "Order Revenue", orderData.total, `Order #${newOrderId}`]);
+      }
+
       await client.query("COMMIT");
 
       return {
@@ -476,8 +472,8 @@ export class OrdersRepository {
         VALUES ($1, $2)
       `, ["ORDER_STATUS_UPDATE", `Order ${orderId} moved from ${previousStatus} to ${status}`]);
 
-      // 6. INVENTORY AUTOMATION ON "Accepted"
-      if (status === "Accepted") {
+      // 6. INVENTORY AUTOMATION ON "Served"
+      if (status === "Served") {
         const itemsRes = await client.query(`SELECT menu_item_id, quantity FROM order_items WHERE order_id = $1`, [orderId]);
         
         for (const item of itemsRes.rows) {
@@ -770,7 +766,7 @@ export class OrdersRepository {
   }
   async createCategory(cat: any): Promise<any> {
     const res = await query(`
-      INSERT INTO categories (restaurant_id, name, description, image_url, display_order, is_active, background_color, icon)
+      INSERT INTO menu_categories (restaurant_id, name, description, image_url, display_order, is_active, background_color, icon)
       VALUES ((SELECT id FROM restaurants LIMIT 1), $1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `, [cat.name, cat.description, cat.image_url, cat.display_order || 0, cat.is_active ?? true, cat.background_color || 'bg-zinc-900', cat.icon || 'Utensils']);
@@ -779,7 +775,7 @@ export class OrdersRepository {
 
   async updateCategory(id: string, cat: any): Promise<any> {
     const res = await query(`
-      UPDATE categories 
+      UPDATE menu_categories 
       SET name = COALESCE($1, name),
           description = COALESCE($2, description),
           image_url = COALESCE($3, image_url),
@@ -804,16 +800,17 @@ export class OrdersRepository {
       INSERT INTO menu_items (
         restaurant_id, category_id, name, description, short_description, price, discounted_price, gst_percentage, 
         image_url, images, preparation_time, calories, spice_level, dietary_preference, tags, timing_slot, 
-        stock_type, current_stock, addons, removable_ingredients, availability_status
+        stock_type, current_stock, addons, removable_ingredients, availability_status, is_veg, is_special, is_recommended
       )
       VALUES (
-        (SELECT id FROM restaurants LIMIT 1), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+        (SELECT id FROM restaurants LIMIT 1), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
       )
       RETURNING id
     `, [
       item.category_id, item.name, item.description, item.short_description, item.price, item.discounted_price, item.gst_percentage || 5,
       item.image, item.images || [], item.preparation_time || 15, item.calories, item.spice_level, item.dietary_preference, item.tags || [], item.timing_slot,
-      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : '[]', item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : '[]', item.status || 'Available'
+      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : '[]', item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : '[]', item.status || 'Available',
+      item.is_veg !== undefined ? item.is_veg : true, item.is_special || false, item.is_recommended || false
     ]);
     return res.rows[0];
   }
@@ -841,13 +838,16 @@ export class OrdersRepository {
         addons = COALESCE($18::jsonb, addons),
         removable_ingredients = COALESCE($19::jsonb, removable_ingredients),
         availability_status = COALESCE($20, availability_status),
-        
-      WHERE id = $21
+        is_veg = COALESCE($21, is_veg),
+        is_special = COALESCE($22, is_special),
+        is_recommended = COALESCE($23, is_recommended)
+      WHERE id = $24
       RETURNING id
     `, [
       item.category_id, item.name, item.description, item.short_description, item.price, item.discounted_price, item.gst_percentage,
       item.image, item.images, item.preparation_time, item.calories, item.spice_level, item.dietary_preference, item.tags, item.timing_slot,
-      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : null, item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : null, item.status, id
+      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : null, item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : null, item.status, 
+      item.is_veg, item.is_special, item.is_recommended, id
     ]);
     return res.rows[0];
   }

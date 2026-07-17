@@ -43,6 +43,7 @@ export default function InventoryView({
 }: InventoryViewProps) {
   const [localInventory, setLocalInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Healthy" | "Low Stock" | "Out Of Stock">("All");
   const [filterCategory, setFilterCategory] = useState<string>("All");
@@ -103,8 +104,14 @@ export default function InventoryView({
       });
       if (res.ok) {
         const data = await res.json();
-        setLocalInventory(data);
-        onUpdateInventory(data);
+        if (Array.isArray(data)) {
+          setLocalInventory(data);
+          onUpdateInventory(data);
+        } else {
+          console.warn("Inventory API returned non-array data:", data);
+          setLocalInventory([]);
+          onUpdateInventory([]);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch inventory", err);
@@ -127,6 +134,7 @@ export default function InventoryView({
       return showToast("Values cannot be negative", "error");
     }
 
+    setIsSaving(true);
     try {
       const token = localStorage.getItem("token") || "";
       const url = editingItem ? `/api/inventory/${editingItem.id}` : "/api/inventory";
@@ -144,13 +152,25 @@ export default function InventoryView({
       if (res.ok) {
         showToast(editingItem ? "Ingredient Updated Successfully" : "Ingredient Added Successfully", "success");
         setIsAddEditModalOpen(false);
-        fetchInventory();
+        setFormData({
+          name: "",
+          category: "Vegetables",
+          currentQty: 0,
+          unit: "Kg",
+          reorderLevel: 0,
+          supplierId: "",
+          unitPrice: 0
+        });
+        setEditingItem(null);
+        await fetchInventory();
       } else {
         const errorData = await res.json();
         showToast(errorData.error || "Database Error", "error");
       }
     } catch (err: any) {
       showToast(err.message || "Database Error", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -640,7 +660,7 @@ export default function InventoryView({
             </div>
             <div className="p-5 border-t border-zinc-800 flex justify-end gap-3 bg-zinc-950/50">
               <button onClick={() => setIsAddEditModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors">Cancel</button>
-              <button onClick={handleSaveIngredient} className="px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 transition-colors">Save</button>
+              <button onClick={handleSaveIngredient} disabled={isSaving} className="px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 transition-colors">{isSaving ? "Saving..." : "Save"}</button>
             </div>
           </div>
         </div>

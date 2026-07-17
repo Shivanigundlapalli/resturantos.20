@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import CustomerLanding from "./CustomerLanding";
-import CustomerOTP from "./CustomerOTP";
 import CustomerDashboard from "./CustomerDashboard";
 import CustomerCheckout from "./CustomerCheckout";
 import CustomerOrderTracking from "./CustomerOrderTracking";
 import { MenuItem } from "../types";
 
-export type CustomerFlowState = "landing" | "otp" | "dashboard" | "checkout" | "tracking";
+export type CustomerFlowState = "dashboard" | "checkout" | "tracking";
 
 export interface CartItem extends MenuItem {
   cartItemId: string;
@@ -41,16 +39,6 @@ export default function CustomerApp() {
     if (tNum) setTableNumber(tNum);
   }, []);
 
-  const handleDetailsSubmit = (name: string, mobile: string) => {
-    setCustomerName(name);
-    setMobileNumber(mobile);
-    setFlowState("otp");
-  };
-
-  const handleOTPVerify = () => {
-    setFlowState("dashboard");
-  };
-
   const handleProceedToCheckout = () => {
     if (cart.length > 0) {
       setFlowState("checkout");
@@ -68,19 +56,6 @@ export default function CustomerApp() {
 
   return (
     <div className="w-screen h-screen bg-[#041A13] overflow-hidden font-sans">
-      {flowState === "landing" && (
-        <CustomerLanding 
-          tableNumber={tableNumber} 
-          restaurantId={restaurantId} 
-          onSubmit={handleDetailsSubmit} 
-        />
-      )}
-      {flowState === "otp" && (
-        <CustomerOTP 
-          mobileNumber={mobileNumber} 
-          onVerify={handleOTPVerify} 
-        />
-      )}
       {flowState === "dashboard" && (
         <CustomerDashboard 
           cart={cart}

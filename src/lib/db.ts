@@ -41,8 +41,23 @@ export async function bootstrapDatabase() {
 
   try {
     const connectionString = process.env.DATABASE_URL;
-    // For local development and to fulfill Prompt 1 cleanly, we ALWAYS drop and recreate.
-    // If you want to keep data in prod, remove the DROP statements later.
+
+    // Check if tables already exist to avoid wiping out data on every restart
+    const tableCheckRes = await p.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'restaurants'
+      );
+    `);
+    
+    if (tableCheckRes.rows[0].exists) {
+      console.log("ERP tables already exist. Skipping database bootstrap to preserve data.");
+      isInitialized = true;
+      return;
+    }
+
+    // For local development and to fulfill Prompt 1 cleanly, we drop and recreate only if missing.
     console.log("Dropping existing tables for clean ERP schema bootstrap...");
     await p.query(`
       DROP TABLE IF EXISTS order_items CASCADE;
@@ -69,6 +84,7 @@ export async function bootstrapDatabase() {
 
       DROP TABLE IF EXISTS suppliers CASCADE;
       DROP TABLE IF EXISTS finances CASCADE;
+      DROP TABLE IF EXISTS otp_verifications CASCADE;
     `);
 
     console.log("Creating new ERP tables...");
@@ -105,20 +121,43 @@ export async function bootstrapDatabase() {
         id SERIAL PRIMARY KEY,
         restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
         name VARCHAR(100) NOT NULL,
+        description TEXT,
+        image_url TEXT,
         display_order INT DEFAULT 0,
-        is_active BOOLEAN DEFAULT TRUE
+        is_active BOOLEAN DEFAULT TRUE,
+        background_color VARCHAR(50) DEFAULT 'bg-zinc-900',
+        icon VARCHAR(50) DEFAULT 'Utensils'
       );
 
       CREATE TABLE menu_items (
         id SERIAL PRIMARY KEY,
         category_id INT REFERENCES menu_categories(id) ON DELETE CASCADE,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
+        description TEXT,
+        short_description TEXT,
         price DECIMAL(10, 2) NOT NULL,
-        cost DECIMAL(10, 2) NOT NULL,
+        discounted_price DECIMAL(10, 2),
+        cost DECIMAL(10, 2) DEFAULT 0,
+        gst_percentage DECIMAL(5, 2) DEFAULT 5,
         status VARCHAR(50) DEFAULT 'Available',
+        availability_status VARCHAR(50) DEFAULT 'Available',
         popularity INT DEFAULT 3,
         image_url TEXT,
-        is_veg BOOLEAN DEFAULT TRUE
+        images JSONB,
+        preparation_time INT DEFAULT 15,
+        calories INT,
+        spice_level VARCHAR(50),
+        is_veg BOOLEAN DEFAULT TRUE,
+        is_special BOOLEAN DEFAULT FALSE,
+        is_recommended BOOLEAN DEFAULT FALSE,
+        dietary_preference VARCHAR(100),
+        tags JSONB,
+        timing_slot VARCHAR(100),
+        stock_type VARCHAR(50),
+        current_stock INT DEFAULT 0,
+        addons JSONB,
+        removable_ingredients JSONB
       );
 
       CREATE TABLE ingredients (

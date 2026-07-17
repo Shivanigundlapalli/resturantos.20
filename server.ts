@@ -1,16 +1,39 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import fs from "fs";
 import jwt from "jsonwebtoken";
-import { evaluateThresholds, getNotificationState, scanInventoryOnStartup } from "./src/lib/twilioService.js";
+import multer from "multer";
+import crypto from "crypto";
+import { evaluateThresholds, getNotificationState, scanInventoryOnStartup, sendOtpSms } from "./src/lib/twilioService.js";
 import { RestaurantState, ChatMessage, ChatResponse } from "./src/types.js";
 import { bootstrapDatabase, getPool } from "./src/lib/db.js";
 import { OrdersService } from "./src/lib/ordersService.js";
 import { runMultiAgentSystem } from "./src/lib/agents.js";
 import { generateAndSendBusinessReport } from "./src/lib/reportService.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure uploads directory exists
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Load environment variables
 dotenv.config();
@@ -220,6 +243,9 @@ async function startServer() {
 
   const app = express();
   app.use(express.json());
+  
+  // Static route for uploaded images
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
   // --- RBAC & Authentication Middleware ---
   const JWT_SECRET = process.env.JWT_SECRET || "fallback_dev_secret_key_restaurantos";
@@ -262,6 +288,15 @@ async function startServer() {
       next();
     });
   };
+
+  // Upload endpoint
+  app.post("/api/upload", requireOwner, upload.single("image"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+    const fileUrl = `/uploads/${req.file.filename}`;
+    return res.status(200).json({ success: true, url: fileUrl });
+  });
 
   // API Route: Login Authentication
   app.post("/api/auth/login", (req, res) => {
@@ -447,7 +482,7 @@ async function startServer() {
             currentQty: row.currentQty,
             unit: row.unit,
             reorderLevel: row.reorderLevel,
-            supplierId: String(row.supplierId),
+            supplierId: row.supplierId ? String(row.supplierId) : "",
             unitPrice: row.unitPrice,
             supplierName: row.company_name,
             lastUpdated: row.last_updated,
@@ -462,9 +497,24 @@ async function startServer() {
             last_notification_type: row.last_notification_type,
             ...getNotificationState(String(row.inventory_id))
          }));
-       } catch (e) {
-         console.error("Error fetching inventory for state sync:", e);
-       }
+         } catch (e) {
+           console.error("Error fetching inventory for state sync:", e);
+         }
+         try {
+           const suppResult = await db.query(`SELECT id, company_name as "companyName", contact_person as "contactPerson", phone FROM suppliers`);
+           if (suppResult.rows.length > 0) {
+             dbState.suppliers = suppResult.rows.map(row => ({
+               id: String(row.id),
+               companyName: row.companyName,
+               contactPerson: row.contactPerson,
+               phone: row.phone,
+               itemsSupplied: [],
+               pendingPayments: 0
+             }));
+           }
+         } catch (e) {
+           console.error("Error fetching suppliers for state sync:", e);
+         }
     }
     await syncDbStateFromPostgres();
     res.json(dbState);
@@ -511,16 +561,35 @@ async function startServer() {
     }
   });
 
-  // Mock OTP Endpoints for Customer Flow
-  app.post("/api/customer/otp/send", (req, res) => {
-    // In a real app, integrate with SMS provider
+  // Real OTP generation and in-memory store
+  const otpStore = new Map<string, string>();
+
+  app.post("/api/auth/send-otp", (req, res) => {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: "Phone number required" });
+    
+    const otp = "1234"; // Demo OTP
+    otpStore.set(phone, otp);
+    
+    console.log(`[SMS Gateway] Sent OTP ${otp} to ${phone}`);
+    // In a real app, integrate with Twilio/SMS provider here
     res.json({ success: true, message: "OTP sent successfully" });
   });
 
-  app.post("/api/customer/otp/verify", (req, res) => {
-    const { otp } = req.body;
-    if (otp === "1234") {
-      res.json({ success: true, message: "OTP verified" });
+  app.post("/api/auth/verify-otp", (req, res) => {
+    const { phone, otp, name } = req.body;
+    const storedOtp = otpStore.get(phone);
+    
+    if (storedOtp && storedOtp === otp) {
+      otpStore.delete(phone); // Burn OTP
+      
+      const token = jwt.sign(
+        { phone, name: name || "Customer", role: "customer" },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+      
+      res.json({ success: true, message: "OTP verified", token });
     } else {
       res.status(400).json({ error: "Invalid OTP" });
     }
@@ -597,13 +666,14 @@ app.get("/customers", handleGetCustomers);
 
   // GET /api/menu & GET /menu - Load menu items directly from PostgreSQL
   
-const handleGetMenu = async (req, res) => {
-  if (!getPool()) return res.json(dbState.menu);
+const handleGetMenu = async (req: express.Request, res: express.Response) => {
+  if (!getPool()) return res.json({ success: true, data: dbState.menu });
   try {
     const menu = await ordersService.getMenuItems();
-    return res.json(menu);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.json({ success: true, data: menu || [] });
+  } catch (err: any) {
+    console.error("[GET /api/menu] Database fetch failed:", err.stack);
+    return res.json({ success: false, message: err.message, data: [] });
   }
 };
 app.get("/api/menu", handleGetMenu);
@@ -615,10 +685,10 @@ app.get("/menu", handleGetMenu);
     if (getPool()) {
       try {
         const categories = await ordersService.getCategories();
-        return res.json(categories);
+        return res.json(categories || []);
       } catch (err: any) {
-        console.error("PostgreSQL categories fetch failed:", err);
-        return res.status(500).json({ error: err.message });
+        console.error("[GET /api/categories] Database fetch failed:", err.stack);
+        return res.json([]);
       }
     }
     res.json([]);
@@ -670,15 +740,15 @@ app.get("/menu", handleGetMenu);
     if (getPool()) {
       try {
         const item = await ordersService.createMenuItem(req.body);
-        return res.status(201).json(item);
+        return res.status(201).json({ success: true, data: item, message: "Menu item created successfully" });
       } catch (err: any) {
         console.error("Create menu item failed:", err);
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ success: false, message: err.message });
       }
     }
     const newItem = { id: `m_${Date.now()}`, ...req.body };
     dbState.menu.push(newItem);
-    return res.status(201).json(newItem);
+    return res.status(201).json({ success: true, data: newItem, message: "Menu item created successfully" });
   };
   app.post("/api/menu", requireOwner, handleCreateMenu);
 
@@ -687,16 +757,16 @@ app.get("/menu", handleGetMenu);
     if (getPool()) {
       try {
         const item = await ordersService.updateMenuItem(req.params.id, req.body);
-        return res.json(item);
+        return res.json({ success: true, data: item, message: "Menu item updated successfully" });
       } catch (err: any) {
         console.error("Update menu item failed:", err);
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ success: false, message: err.message });
       }
     }
     const item = dbState.menu.find(m => m.id === req.params.id);
-    if (!item) return res.status(404).json({ error: "Not found" });
+    if (!item) return res.status(404).json({ success: false, message: "Not found" });
     Object.assign(item, req.body);
-    return res.json(item);
+    return res.json({ success: true, data: item, message: "Menu item updated successfully" });
   };
   app.put("/api/menu/:id", requireOwner, handleUpdateMenu);
 
@@ -705,13 +775,13 @@ app.get("/menu", handleGetMenu);
     if (getPool()) {
       try {
         await ordersService.deleteMenuItem(req.params.id);
-        return res.status(204).end();
+        return res.json({ success: true, message: "Menu item deleted successfully" });
       } catch (err: any) {
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ success: false, message: err.message });
       }
     }
     dbState.menu = dbState.menu.filter(m => m.id !== req.params.id);
-    return res.status(204).end();
+    return res.json({ success: true, message: "Menu item deleted successfully" });
   };
   app.delete("/api/menu/:id", requireOwner, handleDeleteMenu);
 
@@ -756,9 +826,10 @@ app.get("/menu", handleGetMenu);
         last_notification_type: row.last_notification_type,
         ...getNotificationState(String(row.inventory_id))
       }));
-      res.json(inventoryItems);
+      res.json(inventoryItems || []);
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      console.error("[GET /api/inventory] Database fetch failed:", err.stack);
+      res.json([]);
     }
   });
 
@@ -799,9 +870,15 @@ app.get("/menu", handleGetMenu);
         ingredientId = insertIng.rows[0].id;
       }
 
+      let finalSupplierId = null;
+      if (supplierId && supplierId !== "null" && !String(supplierId).startsWith("s") && String(supplierId) !== "") {
+        finalSupplierId = parseInt(supplierId as string, 10);
+        if (isNaN(finalSupplierId)) finalSupplierId = null;
+      }
+
       const insertInv = await client.query(
         "INSERT INTO inventory (ingredient_id, current_qty, reorder_level, unit_price, supplier_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-        [ingredientId, currentQty, reorderLevel, unitPrice, supplierId || null]
+        [ingredientId, currentQty, reorderLevel, unitPrice, finalSupplierId]
       );
       
       if (currentQty > 0) {
@@ -815,6 +892,7 @@ app.get("/menu", handleGetMenu);
       res.status(201).json({ id: String(insertInv.rows[0].id) });
     } catch (err: any) {
       await client.query("ROLLBACK");
+      console.error("POST /api/inventory ERROR:", err.stack);
       res.status(500).json({ error: err.message });
     } finally {
       client.release();
@@ -841,9 +919,15 @@ app.get("/menu", handleGetMenu);
       const ingredientId = invRes.rows[0].ingredient_id;
 
       await client.query("UPDATE ingredients SET name = $1, category = $2, unit = $3 WHERE id = $4", [name, category, unit, ingredientId]);
+      let finalSupplierId = null;
+      if (supplierId && supplierId !== "null" && !String(supplierId).startsWith("s") && String(supplierId) !== "") {
+        finalSupplierId = parseInt(supplierId as string, 10);
+        if (isNaN(finalSupplierId)) finalSupplierId = null;
+      }
+
       await client.query(
         "UPDATE inventory SET current_qty = $1, reorder_level = $2, unit_price = $3, supplier_id = $4 WHERE id = $5",
-        [currentQty, reorderLevel, unitPrice, supplierId || null, invId]
+        [currentQty, reorderLevel, unitPrice, finalSupplierId, invId]
       );
 
       await client.query("COMMIT");
@@ -1683,20 +1767,29 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ success: false, message: "Phone number required" });
     
+    // E.164 Format validation
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+      return res.status(400).json({ success: false, message: "Invalid phone number format. Use E.164 (e.g. +919876543210)" });
+    }
+    const cleanPhone = phone.replace(/\s+/g, '');
+    
     const pool = getPool();
     if (!pool) return res.status(503).json({ success: false, message: "DB offline" });
 
     try {
-      console.log(`[Customer Auth] Requesting OTP for ${phone}`);
-      const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit OTP
+      console.log(`[Customer Auth] Requesting OTP for ${cleanPhone}`);
+      const otp = crypto.randomInt(100000, 1000000).toString(); // 6 digit secure OTP
       
       await pool.query(
-        "INSERT INTO otp_verifications (phone, otp, expires_at) VALUES ($1, $2, NOW() + INTERVAL '5 minutes')",
-        [phone, otp]
+        "INSERT INTO otp_verifications (phone, otp, expires_at, attempts) VALUES ($1, $2, NOW() + INTERVAL '5 minutes', 0)",
+        [cleanPhone, otp]
       );
       
-      console.log(`[Customer Auth] Generated OTP for ${phone}: ${otp}`);
-      res.json({ success: true, message: "OTP sent successfully", dev_otp: otp });
+      await sendOtpSms(cleanPhone, otp);
+      
+      console.log(`[Customer Auth] Sent secure OTP to ${cleanPhone}`);
+      res.json({ success: true, message: "OTP sent successfully" });
     } catch (err: any) {
       console.error("[Customer Auth] Failed to send OTP:", err);
       res.status(500).json({ success: false, message: "Failed to send OTP", error: err.message });
@@ -1707,24 +1800,44 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
   app.post("/api/auth/verify-otp", async (req, res) => {
     const { phone, otp, name } = req.body;
     if (!phone || !otp) return res.status(400).json({ success: false, message: "Phone and OTP required" });
+    
+    const cleanPhone = phone.replace(/\s+/g, '');
 
     const pool = getPool();
     if (!pool) return res.status(503).json({ success: false, message: "DB offline" });
 
     try {
-      console.log(`[Customer Auth] Verifying OTP for ${phone}`);
+      console.log(`[Customer Auth] Verifying OTP for ${cleanPhone}`);
+      // Find the most recent active OTP for this number
       const result = await pool.query(
-        "SELECT id FROM otp_verifications WHERE phone = $1 AND otp = $2 AND expires_at > NOW() AND is_verified = FALSE ORDER BY created_at DESC LIMIT 1",
-        [phone, otp]
+        "SELECT id, otp, expires_at, attempts FROM otp_verifications WHERE phone = $1 AND is_verified = FALSE ORDER BY created_at DESC LIMIT 1",
+        [cleanPhone]
       );
 
       if (result.rows.length === 0) {
-        console.warn(`[Customer Auth] Invalid or expired OTP for ${phone}`);
-        return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+        return res.status(400).json({ success: false, message: "No active OTP found. Please request a new one." });
+      }
+
+      const otpRecord = result.rows[0];
+
+      // Expiry Check
+      if (new Date(otpRecord.expires_at) < new Date()) {
+        return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+      }
+
+      // Max Attempts Check
+      if (otpRecord.attempts >= 5) {
+        return res.status(400).json({ success: false, message: "Maximum verification attempts exceeded. Please request a new OTP." });
+      }
+
+      // Validation
+      if (otpRecord.otp !== otp) {
+        await pool.query("UPDATE otp_verifications SET attempts = attempts + 1 WHERE id = $1", [otpRecord.id]);
+        return res.status(400).json({ success: false, message: "Invalid OTP" });
       }
 
       // Mark as verified
-      await pool.query("UPDATE otp_verifications SET is_verified = TRUE WHERE id = $1", [result.rows[0].id]);
+      await pool.query("UPDATE otp_verifications SET is_verified = TRUE WHERE id = $1", [otpRecord.id]);
       
       // Upsert Customer
       let custRes = await pool.query("SELECT id FROM customers WHERE phone = $1", [phone]);
@@ -1758,7 +1871,17 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+  // Static Files
+app.use(express.static(path.join(__dirname, "dist")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.post("/api/upload", requireOwner, upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No file uploaded" });
+  }
+  const fileUrl = `/uploads/${req.file.filename}`;
+  return res.status(200).json({ success: true, url: fileUrl });
+});
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });

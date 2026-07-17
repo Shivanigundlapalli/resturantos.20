@@ -227,6 +227,7 @@ export default function DashboardView({ restaurantState, setActiveTab }: Dashboa
                   <div className="text-right">
                     <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
                       order.status === 'Pending' ? 'bg-rose-100 text-rose-500' :
+                      order.status === 'Accepted' ? 'bg-blue-100 text-blue-700' :
                       order.status === 'Preparing' ? 'bg-amber-100 text-amber-700' :
                       order.status === 'Ready' ? 'bg-transparent border border-amber-500/30 text-amber-500' :
                       'bg-zinc-950 text-zinc-300'

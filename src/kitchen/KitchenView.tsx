@@ -67,7 +67,8 @@ export default function KitchenView() {
 
     let nextStatus = "Served";
     
-    if (currentStatus === "Pending") nextStatus = "Preparing";
+    if (currentStatus === "Pending") nextStatus = "Accepted";
+    else if (currentStatus === "Accepted") nextStatus = "Preparing";
     else if (currentStatus === "Preparing") nextStatus = "Ready";
     else if (currentStatus === "Ready") nextStatus = "Served";
     
@@ -106,14 +107,15 @@ export default function KitchenView() {
 
   const getNextStatusLabel = (status: string) => {
     switch (status) {
-      case "Pending": return "Start Preparing";
+      case "Pending": return "Accept Order";
+      case "Accepted": return "Start Preparing";
       case "Preparing": return "Mark Ready";
       case "Ready": return "Mark Served";
       default: return "";
     }
   };
 
-  const activeOrders = orders.filter(o => o.status !== "Served" && o.status !== "Completed" && o.status !== "Cancelled");
+  const activeOrders = Array.isArray(orders) ? orders.filter(o => o.status !== "Served" && o.status !== "Completed" && o.status !== "Cancelled") : [];
   activeOrders.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   return (

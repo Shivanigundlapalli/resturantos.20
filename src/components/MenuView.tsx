@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Search, Image as ImageIcon, Save, X, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Image as ImageIcon, Save, X, ToggleLeft, ToggleRight, Loader2, UploadCloud } from "lucide-react";
 import { MenuItem } from "../types";
 
 export default function MenuView() {
@@ -11,19 +11,23 @@ export default function MenuView() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchMenu = () => {
     setIsLoading(true);
     fetch("/api/menu")
       .then(res => res.json())
-      .then(data => {
-        setMenuItems(data);
-        setIsLoading(false);
+      .then(result => {
+        if (result.success && Array.isArray(result.data)) {
+          setMenuItems(result.data);
+        } else if (Array.isArray(result)) {
+          setMenuItems(result);
+        } else {
+          setMenuItems([]);
+        }
       })
-      .catch(err => {
-        console.error(err);
-        setIsLoading(false);
-      });
+      .catch(err => console.error(err))
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
@@ -41,9 +45,13 @@ export default function MenuView() {
     const method = isNew ? "POST" : "PUT";
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(editingItem)
       });
       if (res.ok) {
@@ -59,7 +67,11 @@ export default function MenuView() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
     try {
-      const res = await fetch(`/api/menu/${id}`, { method: "DELETE" });
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/menu/${id}`, { 
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) fetchMenu();
     } catch (err) {
       console.error(err);
@@ -69,9 +81,13 @@ export default function MenuView() {
   const toggleStatus = async (item: MenuItem) => {
     const newStatus = item.status === "Available" ? "Sold Out" : "Available";
     try {
+      const token = localStorage.getItem("token");
       await fetch(`/api/menu/${item.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ status: newStatus })
       });
       fetchMenu();
@@ -294,14 +310,54 @@ export default function MenuView() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-300">Image URL</label>
-                  <input 
-                    type="url" 
-                    value={editingItem?.image || ""}
-                    onChange={e => setEditingItem({...editingItem, image: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 shadow-none transition-shadow"
-                  />
+                  <label className="text-xs font-semibold text-zinc-300">Dish Image</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="url" 
+                      value={editingItem?.image || ""}
+                      onChange={e => setEditingItem({...editingItem, image: e.target.value})}
+                      placeholder="Image URL or upload..."
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 shadow-none transition-shadow"
+                    />
+                    <label className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap">
+                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                      <span>{isUploading ? "..." : "Upload"}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        disabled={isUploading}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          setIsUploading(true);
+                          const formData = new FormData();
+                          formData.append("image", file);
+                          
+                          try {
+                            const token = localStorage.getItem("token");
+                            const res = await fetch("/api/upload", {
+                              method: "POST",
+                              headers: { "Authorization": `Bearer ${token}` },
+                              body: formData
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.success) {
+                              setEditingItem({ ...editingItem, image: data.url });
+                            } else {
+                              alert("Upload failed: " + (data.message || "Unknown error"));
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            alert("Network error during upload");
+                          } finally {
+                            setIsUploading(false);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
                 
                 <div className="space-y-1.5">

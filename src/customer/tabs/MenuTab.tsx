@@ -21,7 +21,8 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
     fetch("/api/menu")
       .then(res => res.json())
       .then(data => {
-        setMenuItems(data);
+        const items = data.success && Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        setMenuItems(items);
         setIsLoading(false);
       })
       .catch(err => {
@@ -133,13 +134,18 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
           <div className="grid grid-cols-1 gap-5">
             {displayedItems.map((item) => {
               const qty = getCartQuantity(item.id);
-              const isVeg = item.is_veg !== false; // assuming true if undefined for UI sake based on name if needed, but using simple logic
-              const typeIsVeg = !item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg');
+              const typeIsVeg = item.isVeg !== undefined ? item.isVeg : (!item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg'));
+              const isAvailable = item.status !== "Sold Out" && item.status !== "Out Of Stock" && item.status !== "Discontinued";
               
               return (
-                <div key={item.id} className="bg-[#0A241C] rounded-3xl p-4 flex gap-4 border border-[#1B3629] shadow-md relative overflow-hidden">
-                  <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                <div key={item.id} className={`bg-[#0A241C] rounded-3xl p-4 flex gap-4 border border-[#1B3629] shadow-md relative overflow-hidden ${!isAvailable ? 'opacity-60 grayscale-[0.3]' : ''}`}>
+                  <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner relative">
                     <img src={getDishImage(item.name)} alt={item.name} className="w-full h-full object-cover" />
+                    {!isAvailable && (
+                      <div className="absolute inset-0 bg-[#041A13]/60 flex items-center justify-center">
+                        <span className="text-[10px] font-black text-[#FFFFFF] bg-red-600 px-2 py-1 rounded shadow-lg uppercase">Sold Out</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
@@ -155,8 +161,8 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
                         <span className="flex items-center text-[#D4A53A] text-[10px] font-black bg-[#D4A53A]/10 px-1.5 py-0.5 rounded-md">
                           <Star className="w-3 h-3 mr-0.5 fill-[#D4A53A]" /> 4.{item.popularity || 5}
                         </span>
-                        <span className="flex items-center text-[#A7B4AE] text-[10px] font-medium bg-[#1B3629]/50 px-1.5 py-0.5 rounded-md">
-                          <Clock className="w-3 h-3 mr-0.5" /> 15m
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isAvailable ? 'bg-[#0F8F5B]/10 text-[#0F8F5B]' : 'bg-red-500/10 text-red-500'}`}>
+                          {isAvailable ? 'Available' : 'Out of Stock'}
                         </span>
                       </div>
                     </div>
@@ -164,7 +170,7 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
                     <div className="flex justify-between items-center mt-3">
                       <span className="text-lg font-black text-[#FFFFFF]">₹{item.price}</span>
                       
-                      {qty > 0 ? (
+                      {qty > 0 && isAvailable ? (
                         <div className="flex items-center bg-[#0F8F5B] rounded-xl overflow-hidden shadow-lg shadow-[#0F8F5B]/20">
                           <button 
                             onClick={() => handleRemoveFromCart(item.id)}
@@ -183,7 +189,12 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
                       ) : (
                         <button 
                           onClick={() => handleAddToCart(item)}
-                          className="bg-[#041A13] border border-[#0F8F5B] text-[#0F8F5B] px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-[#0F8F5B] hover:text-[#FFFFFF] transition-all shadow-sm"
+                          disabled={!isAvailable}
+                          className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                            isAvailable 
+                            ? 'bg-[#041A13] border border-[#0F8F5B] text-[#0F8F5B] hover:bg-[#0F8F5B] hover:text-[#FFFFFF]' 
+                            : 'bg-[#1B3629] text-[#A7B4AE] cursor-not-allowed opacity-50'
+                          }`}
                         >
                           Add
                         </button>

@@ -120,7 +120,7 @@ async function updateInventoryNotificationDb(inventoryId: string, updates: any) 
     values.push(value);
     i++;
   }
-  values.push(inventoryId.replace('i_', '')); // Handle if id is prefixed with i_
+  values.push(String(inventoryId).replace('i_', '')); // Handle if id is prefixed with i_
   
   try {
     // Also try matching the exact ID string if it's a UUID or just plain int
@@ -375,5 +375,33 @@ export async function scanInventoryOnStartup() {
     console.log('Startup threshold scan completed.');
   } catch (err) {
     console.error('Error scanning inventory on startup:', err);
+  }
+}
+
+export async function sendOtpSms(to: string, otp: string) {
+  if (!client) {
+    console.warn('[Twilio Service] SMS skipped because Twilio client is not initialized');
+    return;
+  }
+  
+  const recipient = isDemoMode && demoPhone ? demoPhone : to;
+  const sender = twilioPhoneNumber;
+  
+  if (!sender) {
+    console.error('[Twilio Service] Cannot send SMS, TWILIO_PHONE_NUMBER is missing');
+    return;
+  }
+  
+  try {
+    console.log("[Twilio Service] Sending OTP to $recipient");
+    await client.messages.create({
+      body: "Your RestaurantOS verification code is $otp. It will expire in 5 minutes.",
+      from: sender,
+      to: recipient,
+    });
+    console.log("[Twilio Service] Successfully sent OTP to $recipient");
+  } catch (error) {
+    console.error("[Twilio Service] Failed to send OTP to $recipient:", error);
+    throw error;
   }
 }

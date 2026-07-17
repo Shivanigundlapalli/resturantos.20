@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Mic, Star, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { TabType } from "../CustomerDashboard";
+import { MenuItem } from "../../types";
 
 interface HomeTabProps {
   customerName: string;
@@ -13,33 +14,94 @@ export default function HomeTab({ customerName, tableNumber, setActiveTab }: Hom
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
+  
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const heroBanners = [
+  useEffect(() => {
+    fetch("/api/menu")
+      .then(res => res.json())
+      .then(data => {
+        const items = data.success && Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        setMenuItems(items);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load menu", err);
+        setIsLoading(false);
+      });
+  }, []);
+
+  // Image helpers
+  const getDishImage = (dishName: string) => {
+    const name = dishName.toLowerCase();
+    if (name.includes("chicken dum biryani")) return "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=800&q=80";
+    if (name.includes("veg biryani")) return "https://images.unsplash.com/photo-1589302168068-964664d93cb0?w=800&q=80";
+    if (name.includes("mutton")) return "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&q=80";
+    if (name.includes("paneer")) return "https://images.unsplash.com/photo-1631452180519-c014fe946bc0?w=800&q=80";
+    if (name.includes("egg")) return "https://images.unsplash.com/photo-1600688640254-07d4b4a1fb5e?w=800&q=80"; 
+    if (name.includes("fried rice")) return "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80";
+    if (name.includes("butter chicken") || name.includes("chicken 65") || name.includes("chicken")) return "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&q=80";
+    if (name.includes("gulab jamun") || name.includes("dessert") || name.includes("sweet") || name.includes("cake") || name.includes("brownie") || name.includes("ice cream")) return "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=800&q=80";
+    if (name.includes("filter coffee") || name.includes("coffee") || name.includes("tea") || name.includes("soda") || name.includes("juice") || name.includes("lassi") || name.includes("drink")) return "https://images.unsplash.com/photo-1551030173-122aabc4489c?w=800&q=80";
+    if (name.includes("biryani") || name.includes("rice")) return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80";
+    const fallbacks = [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"
+    ];
+    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return fallbacks[hash % fallbacks.length];
+  };
+
+  const getCategoryImage = (catName: string) => {
+    const name = (catName || "").toLowerCase();
+    if (name.includes("starter") || name.includes("appetizer")) return "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80";
+    if (name.includes("biryani") || name.includes("rice")) return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&q=80";
+    if (name.includes("dessert") || name.includes("sweet")) return "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=400&q=80";
+    if (name.includes("beverage") || name.includes("drink")) return "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&q=80";
+    return "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80";
+  };
+
+  // Dynamic Data Computation
+  const categoriesMap = new Map<string, number>();
+  menuItems.forEach(item => {
+    const cat = item.category || "Other";
+    categoriesMap.set(cat, (categoriesMap.get(cat) || 0) + 1);
+  });
+  
+  const categories = Array.from(categoriesMap.entries()).map(([name, count]) => ({
+    name,
+    items: count,
+    image: getCategoryImage(name)
+  }));
+
+  const bestSellers = [...menuItems]
+    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+    .slice(0, 4)
+    .map(item => ({
+      name: item.name,
+      rating: item.popularity || 4.5,
+      price: item.price,
+      time: "15 min",
+      type: (!item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg')) ? "veg" : "non-veg",
+      image: getDishImage(item.name)
+    }));
+
+  const heroBanners = menuItems.length > 0 ? [
+    { image: getDishImage(menuItems[0]?.name || ""), title: "Today's Special", subtitle: menuItems[0]?.name },
     { image: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?w=1200&q=80", title: "Authentic Indian Cuisine", subtitle: "Prepared Fresh for You" },
-    { image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=1200&q=80", title: "Today's Special", subtitle: "Hyderabadi Dum Biryani" },
     { image: "https://images.unsplash.com/photo-1555126634-323283e090fa?w=1200&q=80", title: "Flat 20% Off", subtitle: "On all Starters" }
+  ] : [
+    { image: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?w=1200&q=80", title: "Authentic Indian Cuisine", subtitle: "Prepared Fresh for You" }
   ];
 
   useEffect(() => {
+    if (heroBanners.length <= 1) return;
     const interval = setInterval(() => {
       setHeroIndex(prev => (prev + 1) % heroBanners.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
-
-  const categories = [
-    { name: "Main Course", items: 24, image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80" },
-    { name: "Starters", items: 16, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80" },
-    { name: "Biryani", items: 8, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&q=80" },
-    { name: "Desserts", items: 12, image: "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=400&q=80" },
-    { name: "Beverages", items: 10, image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&q=80" },
-  ];
-
-  const bestSellers = [
-    { name: "Butter Chicken", rating: 4.8, price: 320, time: "25 min", type: "non-veg", image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&q=80" },
-    { name: "Paneer Butter Masala", rating: 4.7, price: 280, time: "20 min", type: "veg", image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc0?w=400&q=80" },
-    { name: "Masala Dosa", rating: 4.9, price: 120, time: "15 min", type: "veg", image: "https://images.unsplash.com/photo-1589301760014-d929f39ce9b0?w=400&q=80" }
-  ];
+  }, [heroBanners.length]);
 
   return (
     <div className="w-full">
