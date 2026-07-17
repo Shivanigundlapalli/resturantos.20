@@ -47,7 +47,7 @@ export default function App() {
     localStorage.setItem("user", JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
-    if (newUser.role === "kitchen") {
+    if (newUser.role === "kitchen" || roleSelection === "kitchen") {
       window.location.href = "/kitchen";
     }
   };
@@ -73,10 +73,16 @@ export default function App() {
 
   // Fetch live database state from server on mount and setup realtime
   useEffect(() => {
+    if (!token) return;
+
     fetchState();
     
-    if (token && supabase) {
-      const channel = supabase
+    // Fallback polling to guarantee UI synchronization
+    const interval = setInterval(fetchState, 5000);
+
+    let channel: any;
+    if (supabase) {
+      channel = supabase
         .channel('schema-db-changes')
         .on(
           'postgres_changes',
@@ -95,15 +101,14 @@ export default function App() {
           }
         )
         .subscribe();
-        
-      return () => {
-        supabase?.removeChannel(channel);
-      };
-    } else if (token) {
-      // Fallback polling if Supabase isn't configured
-      const interval = setInterval(fetchState, 5000);
-      return () => clearInterval(interval);
     }
+    
+    return () => {
+      clearInterval(interval);
+      if (channel) {
+        supabase?.removeChannel(channel);
+      }
+    };
   }, [token]);
 
   const fetchState = async () => {
@@ -309,18 +314,11 @@ export default function App() {
             <DashboardView 
               restaurantState={restaurantState}
               setActiveTab={setActiveTab}
-            />
-          </ErrorBoundary>
-        );
-      case "orders-board":
-        return (
-          <ErrorBoundary>
-            <OrdersKanban 
-              orders={restaurantState.orders}
               onUpdateStatus={async (id, status) => {
                 try {
+                  // Make sure to use PUT or PATCH to /api/orders/:id as required by the backend
                   const res = await fetch(`/api/orders/${id.replace('ORD-', '').replace('#', '')}`, {
-                    method: "PATCH",
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status })
                   });

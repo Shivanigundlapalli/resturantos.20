@@ -14,22 +14,35 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import OrdersKanban from "./OrdersKanban";
+
 interface DashboardViewProps {
   restaurantState: RestaurantState;
   setActiveTab: (tab: string) => void;
+  onUpdateStatus: (id: string, status: string) => Promise<void>;
 }
 
-export default function DashboardView({ restaurantState, setActiveTab }: DashboardViewProps) {
+export default function DashboardView({ restaurantState, setActiveTab, onUpdateStatus }: DashboardViewProps) {
   const { orders, inventory, menu } = restaurantState;
 
   // Calculate live stats
   const todayOrders = orders.filter(o => new Date(o.timestamp).toDateString() === new Date().toDateString());
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-  const activeOrders = orders.filter(o => !["Completed", "Cancelled"].includes(o.status));
-  const kitchenQueue = orders.filter(o => o.status === "Preparing" || o.status === "Accepted").length;
   
-  const onlineRevenue = todayOrders.filter(o => o.payment_method !== "CASH").reduce((sum, o) => sum + o.total, 0);
-  const cashRevenue = todayOrders.filter(o => o.payment_method === "CASH").reduce((sum, o) => sum + o.total, 0);
+  const completedTodayOrders = todayOrders.filter(o => o.status === "Completed" || o.status === "Served");
+
+  const onlineRevenue = completedTodayOrders
+    .filter(o => o.payment_method === "ONLINE" || o.payment_method === "RAZORPAY")
+    .reduce((sum, o) => sum + o.total, 0);
+    
+  const cashRevenue = completedTodayOrders
+    .filter(o => o.payment_method === "PAY_AT_TABLE" || o.payment_method === "CASH")
+    .reduce((sum, o) => sum + o.total, 0);
+
+  const todayRevenue = onlineRevenue + cashRevenue;
+
+  // Dashboard Active Orders: only display Pending, Accepted, Preparing, Ready (filter out Served, Completed, Cancelled)
+  const activeOrders = orders.filter(o => !["Served", "Completed", "Cancelled"].includes(o.status));
+  const kitchenQueue = orders.filter(o => o.status === "Preparing" || o.status === "Accepted").length;
 
   const lowStockItems = inventory.filter(i => i.currentQty <= i.reorderLevel);
 
@@ -201,48 +214,9 @@ export default function DashboardView({ restaurantState, setActiveTab }: Dashboa
           </motion.div>
         </div>
 
-        {/* Live Orders Feed */}
-        <div className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-none overflow-hidden flex flex-col">
-          <div className="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
-            <h3 className="font-bold text-sm text-zinc-100">Live Orders Feed</h3>
-            <button onClick={() => setActiveTab('orders-board')} className="text-xs font-bold text-amber-500 hover:text-amber-500 flex items-center">
-              Open Board <ChevronRight className="w-3 h-3 ml-0.5" />
-            </button>
-          </div>
-          <div className="divide-y divide-zinc-800 max-h-[400px] overflow-y-auto">
-            {activeOrders.length === 0 ? (
-              <div className="p-8 text-center text-zinc-400 text-sm font-medium">No active orders right now.</div>
-            ) : (
-              activeOrders.slice(0, 10).map((order) => (
-                <div key={order.id} className="p-4 flex items-center justify-between hover:bg-zinc-950 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-zinc-950 flex items-center justify-center font-bold text-zinc-300 text-xs shrink-0">
-                      {order.tableOrType.replace('Table ', 'T')}
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-zinc-100">{order.customerName} <span className="text-zinc-400 font-normal text-xs ml-1">#{order.id.split('-').pop()}</span></div>
-                      <div className="text-xs text-zinc-400 mt-0.5">{order.items.length} items • ₹{order.total.toLocaleString()}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                      order.status === 'Pending' ? 'bg-rose-100 text-rose-500' :
-                      order.status === 'Accepted' ? 'bg-blue-100 text-blue-700' :
-                      order.status === 'Preparing' ? 'bg-amber-100 text-amber-700' :
-                      order.status === 'Ready' ? 'bg-transparent border border-amber-500/30 text-amber-500' :
-                      'bg-zinc-950 text-zinc-300'
-                    }`}>
-                      {order.status}
-                    </span>
-                    <div className="text-[10px] text-zinc-400 mt-1 font-semibold flex items-center justify-end gap-1">
-                      <Clock className="w-3 h-3" />
-                      {Math.floor((Date.now() - new Date(order.timestamp).getTime()) / 60000)}m ago
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+        {/* Live Orders Kanban Embedded */}
+        <div className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-none overflow-hidden">
+          <OrdersKanban orders={orders} onUpdateStatus={onUpdateStatus} />
         </div>
 
       </div>

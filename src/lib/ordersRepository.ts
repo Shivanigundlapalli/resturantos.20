@@ -394,13 +394,8 @@ export class OrdersRepository {
         VALUES ($1, $2)
       `, [newOrderId, orderData.status]);
 
-      // Add to Finances if Paid
-      if (orderData.payment_status === "PAID" || orderData.payment_method === "ONLINE") {
-        await client.query(`
-          INSERT INTO finances (type, category, amount, description, created_at)
-          VALUES ($1, $2, $3, $4, NOW())
-        `, ["Income", "Order Revenue", orderData.total, `Order #${newOrderId}`]);
-      }
+      // Kitchen Queue insertion was the last DB step
+      // Removed broken finances INSERT
 
       await client.query("COMMIT");
 
@@ -434,18 +429,29 @@ export class OrdersRepository {
 
     const client = await p.connect();
     
+    // Attach an error handler to the checked-out client to prevent unhandled exceptions
+    // in case of network drops during the transaction.
+    const errorHandler = (err: Error) => console.error("Checked-out client error:", err.message);
+    client.on("error", errorHandler);
+    
     try {
       await client.query("BEGIN");
 
       // 1. Get previous status
-      const prevRes = await client.query("SELECT status FROM orders WHERE id = $1", [id]);
+      const prevRes = await client.query("SELECT status, total FROM orders WHERE id = $1", [id]);
       if (prevRes.rows.length === 0) throw new Error("Order not found");
       const previousStatus = prevRes.rows[0].status;
+      const orderTotal = prevRes.rows[0].total;
 
-      // 2. Update status
+      // 2. Update status (and mark payment as PAID if Served or Completed)
       const res = await client.query(`
         UPDATE orders 
-        SET status = $1
+        SET 
+          status = $1,
+          payment_status = CASE 
+            WHEN $1::text IN ('Served', 'Completed') THEN 'PAID' 
+            ELSE payment_status 
+          END
         WHERE id = $2 
         RETURNING id, restaurant_id
       `, [status, id]);
@@ -477,28 +483,31 @@ export class OrdersRepository {
         const itemsRes = await client.query(`SELECT menu_item_id, quantity FROM order_items WHERE order_id = $1`, [orderId]);
         
         for (const item of itemsRes.rows) {
-          const recipeRes = await client.query(`SELECT inventory_id, quantity_required FROM recipes WHERE menu_item_id = $1`, [item.menu_item_id]);
+          const recipeRes = await client.query(`SELECT ingredient_id, quantity_required FROM recipes WHERE menu_item_id = $1`, [item.menu_item_id]);
           
           for (const recipe of recipeRes.rows) {
             const deduction = recipe.quantity_required * item.quantity;
             
-            // Deduct from inventory
+            // Deduct from inventory using ingredient_id
             const invRes = await client.query(`
               UPDATE inventory 
-              SET current_stock = current_stock - $1 
-              WHERE id = $2
-              RETURNING id, name, current_stock, minimum_stock_level
-            `, [deduction, recipe.inventory_id]);
+              SET current_qty = current_qty - $1 
+              WHERE ingredient_id = $2
+              RETURNING id, current_qty as current_stock, reorder_level as minimum_stock_level, ingredient_id
+            `, [deduction, recipe.ingredient_id]);
 
             if (invRes.rows.length > 0) {
               const inv = invRes.rows[0];
               
+              const ingRes = await client.query(`SELECT name FROM ingredients WHERE id = $1`, [inv.ingredient_id]);
+              const name = ingRes.rows.length > 0 ? ingRes.rows[0].name : "Unknown Ingredient";
+
               // Low stock alert
               if (inv.current_stock <= inv.minimum_stock_level && inv.current_stock > 0) {
                 await client.query(`
                   INSERT INTO notifications (type, message, read_status)
                   VALUES ($1, $2, FALSE)
-                `, ["LOW_STOCK", `Inventory item ${inv.name} is running low (${inv.current_stock} remaining).`]);
+                `, ["LOW_STOCK", `Inventory item ${name} is running low (${inv.current_stock} remaining).`]);
               }
 
               // Out of Stock Logic
@@ -506,20 +515,26 @@ export class OrdersRepository {
                 await client.query(`
                   INSERT INTO notifications (type, message, read_status)
                   VALUES ($1, $2, FALSE)
-                `, ["OUT_OF_STOCK", `Inventory item ${inv.name} is OUT OF STOCK. Related menu items disabled.`]);
+                `, ["OUT_OF_STOCK", `Inventory item ${name} is OUT OF STOCK. Related menu items disabled.`]);
 
                 // Find all menu items that depend on this inventory item and mark them as Out of Stock
                 await client.query(`
                   UPDATE menu_items
                   SET status = 'Out of Stock'
                   WHERE id IN (
-                    SELECT menu_item_id FROM recipes WHERE inventory_id = $1
+                    SELECT menu_item_id FROM recipes WHERE ingredient_id = $1
                   )
-                `, [inv.id]);
+                `, [inv.ingredient_id]);
               }
             }
           }
         }
+
+        // Finance Revenue Update
+        await client.query(`
+          INSERT INTO finance_ledger (type, category, amount, description, created_at)
+          VALUES ($1, $2, $3, $4, NOW())
+        `, ["Income", "Order Revenue", orderTotal, `Order #${orderId}`]);
       }
 
       await client.query("COMMIT");
@@ -529,6 +544,7 @@ export class OrdersRepository {
       console.error("updateOrderStatus failed:", err);
       return null;
     } finally {
+      client.removeListener("error", errorHandler);
       client.release();
     }
   }
@@ -678,37 +694,18 @@ export class OrdersRepository {
     const res = await query(`
       SELECT id, created_at as timestamp, type, category, 
              CAST(amount AS DOUBLE PRECISION) as amount, description
-      FROM finances
+      FROM finance_ledger
       ORDER BY created_at DESC
     `);
 
     
     return res.rows.map(row => ({
-      id: String(row.id),
-      name: row.name,
-      category_id: String(row.category_id),
-      category: row.category_name || "Main Course",
-      price: row.price,
-      cost: row.cost || row.price * 0.4,
-      status: row.status || "Available",
-      popularity: row.popularity || 5,
-      description: "",
-      image: row.image_url,
-      short_description: "",
-      sub_category: "",
-      discounted_price: undefined,
-      gst_percentage: undefined,
-      calories: undefined,
-      spice_level: "",
-      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
-      isVeg: row.is_veg,
-      tags: [],
-      timing_slot: "",
-      stock_type: "",
-      current_stock: undefined,
-      addons: [],
-      removable_ingredients: [],
-      images: []
+      id: "f" + row.id,
+      timestamp: new Date(row.timestamp).toISOString(),
+      type: row.type,
+      category: row.category,
+      amount: row.amount,
+      description: row.description
     }));
 
   }
@@ -749,7 +746,7 @@ export class OrdersRepository {
     description: string;
   }): Promise<FinanceEntry> {
     const res = await query(`
-      INSERT INTO finances (type, category, amount, description, created_at)
+      INSERT INTO finance_ledger (type, category, amount, description, created_at)
       VALUES ($1, $2, $3, $4, NOW())
       RETURNING id, created_at
     `, [entry.type, entry.category, entry.amount, entry.description]);
@@ -759,7 +756,7 @@ export class OrdersRepository {
       id: "f" + row.id,
       timestamp: new Date(row.created_at).toISOString(),
       type: entry.type,
-      category: entry.category as any,
+      category: entry.category,
       amount: entry.amount,
       description: entry.description
     };

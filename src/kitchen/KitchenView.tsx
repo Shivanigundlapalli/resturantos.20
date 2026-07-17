@@ -41,8 +41,12 @@ export default function KitchenView() {
     }
     fetchOrders();
     
+    // Always poll as a robust fallback to ensure synchronization
+    const interval = setInterval(fetchOrders, 3000);
+
+    let channel: any;
     if (supabase) {
-      const channel = supabase
+      channel = supabase
         .channel('kitchen-updates')
         .on(
           'postgres_changes',
@@ -52,13 +56,14 @@ export default function KitchenView() {
           }
         )
         .subscribe();
-      return () => {
-        supabase?.removeChannel(channel);
-      };
-    } else {
-      const interval = setInterval(fetchOrders, 3000);
-      return () => clearInterval(interval);
     }
+    
+    return () => {
+      clearInterval(interval);
+      if (channel) {
+        supabase?.removeChannel(channel);
+      }
+    };
   }, []);
 
   const handleUpdateStatus = async (orderId: string, currentStatus: string) => {

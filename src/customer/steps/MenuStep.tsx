@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Search, Plus, Minus, Loader2, Star, Clock, Info } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { MenuItem } from "../../types";
-import { CartItem } from "../CustomerApp";
-import { TabType } from "../CustomerDashboard";
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { Search, Plus, Minus, Loader2, Star, Info, ShoppingCart } from 'lucide-react';
+import { MenuItem } from '../../types';
+import { CartItem } from '../CustomerApp';
 
-interface MenuTabProps {
+interface MenuStepProps {
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setActiveTab: (tab: TabType) => void;
+  onNext: () => void;
 }
 
-export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
+export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -33,7 +32,11 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
 
   const categories = ["All", ...Array.from(new Set(menuItems.map(item => item.category)))];
   
+  // Filter items: search query and availability
   const displayedItems = menuItems.filter(item => {
+    const isAvailable = item.status !== "Sold Out" && item.status !== "Out Of Stock" && item.status !== "Discontinued";
+    if (!isAvailable) return false;
+
     if (searchQuery) {
       return item.name.toLowerCase().includes(searchQuery.toLowerCase());
     }
@@ -66,6 +69,9 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
   const getCartQuantity = (itemId: string) => {
     return cart.filter(c => c.id === itemId).reduce((sum, c) => sum + c.cartQuantity, 0);
   };
+  
+  const cartItemCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
 
   const getDishImage = (dishName: string) => {
     const name = dishName.toLowerCase();
@@ -88,28 +94,35 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative bg-[#041A13]">
-      <div className="sticky top-0 bg-[#041A13]/95 backdrop-blur-md z-30 pt-6 px-6 pb-4 border-b border-[#1B3629]">
-        <h2 className="text-2xl font-black text-[#FFFFFF] mb-4">Our Menu</h2>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }}
+      className="w-full h-full flex flex-col relative"
+    >
+      <div className="sticky top-0 bg-[#041A13]/95 backdrop-blur-md z-30 pt-6 px-6 pb-4 border-b border-zinc-800">
+        <h2 className="text-2xl font-black text-zinc-100 mb-4 tracking-tight">Browse Menu</h2>
+        
         <div className="relative mb-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A7B4AE]" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
           <input 
             type="text" 
             placeholder="Search dishes..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#0A241C] border border-[#1B3629] rounded-2xl text-[15px] text-[#FFFFFF] placeholder:text-[#A7B4AE] focus:outline-none focus:border-[#D4A53A] transition-colors"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-[15px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x">
+        
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x pb-2">
           {categories.map((cat, idx) => (
             <button
               key={idx}
               onClick={() => setActiveCategory(cat)}
               className={`snap-start shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                 activeCategory === cat 
-                ? 'bg-[#0F8F5B] text-[#FFFFFF] border-[#0F8F5B] shadow-lg shadow-[#0F8F5B]/20' 
-                : 'bg-[#0A241C] text-[#A7B4AE] border-[#1B3629] hover:border-[#D4A53A]/50'
+                ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg shadow-amber-500/20' 
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-amber-500/50'
               }`}
             >
               {cat}
@@ -118,83 +131,69 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4 pb-[100px]">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-48 text-[#869990]">
-            <Loader2 className="w-8 h-8 animate-spin text-[#D4A53A] mb-2" />
+          <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-500 mb-2" />
             <p className="text-xs font-medium">Loading Menu...</p>
           </div>
         ) : displayedItems.length === 0 ? (
-          <div className="text-center py-10 bg-[#0A241C] rounded-2xl border border-[#1B3629]">
-            <Info className="w-12 h-12 text-[#A7B4AE] mx-auto mb-3 opacity-50" />
-            <h3 className="text-[#FFFFFF] font-bold text-lg mb-1">No dishes found</h3>
-            <p className="text-[#A7B4AE] text-sm">Try a different search or category</p>
+          <div className="text-center py-10 bg-zinc-900 rounded-2xl border border-zinc-800">
+            <Info className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
+            <h3 className="text-zinc-100 font-bold text-lg mb-1">No dishes found</h3>
+            <p className="text-zinc-500 text-sm">Try a different search or category</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {displayedItems.map((item) => {
               const qty = getCartQuantity(item.id);
               const typeIsVeg = item.isVeg !== undefined ? item.isVeg : (!item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg'));
-              const isAvailable = item.status !== "Sold Out" && item.status !== "Out Of Stock" && item.status !== "Discontinued";
               
               return (
-                <div key={item.id} className={`bg-[#0A241C] rounded-3xl p-4 flex gap-4 border border-[#1B3629] shadow-md relative overflow-hidden ${!isAvailable ? 'opacity-60 grayscale-[0.3]' : ''}`}>
+                <div key={item.id} className="bg-zinc-900 rounded-3xl p-4 flex gap-4 border border-zinc-800 shadow-md relative overflow-hidden transition-all hover:border-amber-500/30">
                   <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner relative">
                     <img src={getDishImage(item.name)} alt={item.name} className="w-full h-full object-cover" />
-                    {!isAvailable && (
-                      <div className="absolute inset-0 bg-[#041A13]/60 flex items-center justify-center">
-                        <span className="text-[10px] font-black text-[#FFFFFF] bg-red-600 px-2 py-1 rounded shadow-lg uppercase">Sold Out</span>
-                      </div>
-                    )}
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
                       <div className="flex justify-between items-start">
-                        <h3 className="text-[15px] font-black text-[#FFFFFF] leading-tight pr-2">{item.name}</h3>
+                        <h3 className="text-[15px] font-black text-zinc-100 leading-tight pr-2">{item.name}</h3>
                         <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${typeIsVeg ? 'border-green-500' : 'border-red-500'}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${typeIsVeg ? 'bg-green-500' : 'bg-red-500'}`}></div>
                         </div>
                       </div>
-                      <p className="text-xs text-[#A7B4AE] mt-1 line-clamp-1">{item.category}</p>
+                      <p className="text-xs text-zinc-400 mt-1 line-clamp-1">{item.category}</p>
                       
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="flex items-center text-[#D4A53A] text-[10px] font-black bg-[#D4A53A]/10 px-1.5 py-0.5 rounded-md">
-                          <Star className="w-3 h-3 mr-0.5 fill-[#D4A53A]" /> 4.{item.popularity || 5}
-                        </span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isAvailable ? 'bg-[#0F8F5B]/10 text-[#0F8F5B]' : 'bg-red-500/10 text-red-500'}`}>
-                          {isAvailable ? 'Available' : 'Out of Stock'}
+                        <span className="flex items-center text-amber-500 text-[10px] font-black bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                          <Star className="w-3 h-3 mr-0.5 fill-amber-500" /> 4.{item.popularity || 5}
                         </span>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center mt-3">
-                      <span className="text-lg font-black text-[#FFFFFF]">₹{item.price}</span>
+                      <span className="text-lg font-black text-zinc-100">₹{item.price}</span>
                       
-                      {qty > 0 && isAvailable ? (
-                        <div className="flex items-center bg-[#0F8F5B] rounded-xl overflow-hidden shadow-lg shadow-[#0F8F5B]/20">
+                      {qty > 0 ? (
+                        <div className="flex items-center bg-amber-500 rounded-xl overflow-hidden shadow-lg shadow-amber-500/20">
                           <button 
                             onClick={() => handleRemoveFromCart(item.id)}
-                            className="w-8 h-8 flex items-center justify-center text-[#FFFFFF] hover:bg-black/20 transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-zinc-950 hover:bg-black/10 transition-colors"
                           >
-                            <Minus className="w-4 h-4" />
+                            <Minus className="w-4 h-4 font-bold" />
                           </button>
-                          <span className="w-6 text-center text-[13px] font-black text-[#FFFFFF]">{qty}</span>
+                          <span className="w-6 text-center text-[13px] font-black text-zinc-950">{qty}</span>
                           <button 
                             onClick={() => handleAddToCart(item)}
-                            className="w-8 h-8 flex items-center justify-center text-[#FFFFFF] hover:bg-black/20 transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-zinc-950 hover:bg-black/10 transition-colors"
                           >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4 font-bold" />
                           </button>
                         </div>
                       ) : (
                         <button 
                           onClick={() => handleAddToCart(item)}
-                          disabled={!isAvailable}
-                          className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                            isAvailable 
-                            ? 'bg-[#041A13] border border-[#0F8F5B] text-[#0F8F5B] hover:bg-[#0F8F5B] hover:text-[#FFFFFF]' 
-                            : 'bg-[#1B3629] text-[#A7B4AE] cursor-not-allowed opacity-50'
-                          }`}
+                          className="px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:bg-amber-500 hover:text-zinc-950 hover:border-amber-500"
                         >
                           Add
                         </button>
@@ -207,6 +206,26 @@ export default function MenuTab({ cart, setCart, setActiveTab }: MenuTabProps) {
           </div>
         )}
       </div>
-    </div>
+
+      {/* Floating Action Button for Cart Checkout */}
+      {cartItemCount > 0 && (
+        <div className="absolute bottom-6 left-0 right-0 px-6 flex justify-center z-50">
+          <motion.button
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={onNext}
+            className="w-full max-w-md bg-amber-500 text-zinc-950 px-6 py-4 rounded-2xl font-bold flex items-center justify-between shadow-[0_10px_40px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-zinc-950 text-amber-500 rounded-full flex items-center justify-center text-sm">
+                {cartItemCount}
+              </div>
+              <span>View Cart</span>
+            </div>
+            <span>₹{cartTotal.toFixed(2)} &rarr;</span>
+          </motion.button>
+        </div>
+      )}
+    </motion.div>
   );
 }

@@ -39,7 +39,7 @@ export default function SalesView({
 }: SalesViewProps) {
   // Navigation & Filtering
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"All" | "Pending" | "Completed" | "Cancelled">("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Completed" | "Cancelled">("All");
   const [sortBy, setSortBy] = useState<"timestamp" | "total" | "customerName">("timestamp");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -96,8 +96,8 @@ export default function SalesView({
         
         const today = new Date().toDateString();
         const todayOrders = oList.filter(o => new Date(o.timestamp).toDateString() === today);
-        const pending = oList.filter(o => o.status === "Pending");
-        const completed = oList.filter(o => o.status === "Completed");
+        const pending = oList.filter(o => o.status !== "Completed" && o.status !== "Served" && o.status !== "Cancelled");
+        const completed = oList.filter(o => o.status === "Completed" || o.status === "Served");
         const revenue = completed.reduce((acc, o) => acc + o.total, 0);
         const avg = oList.length > 0 ? Math.round((oList.reduce((acc, o) => acc + o.total, 0) / oList.length) * 100) / 100 : 0;
 
@@ -366,7 +366,11 @@ export default function SalesView({
 
   // Filter & sort orders list
   const filteredOrders = orders.filter(o => {
-    const matchesStatus = statusFilter === "All" || o.status === statusFilter;
+    let matchesStatus = false;
+    if (statusFilter === "All") matchesStatus = true;
+    else if (statusFilter === "Active") matchesStatus = !["Served", "Completed", "Cancelled"].includes(o.status);
+    else if (statusFilter === "Completed") matchesStatus = o.status === "Completed" || o.status === "Served";
+    else if (statusFilter === "Cancelled") matchesStatus = o.status === "Cancelled";
     const cleanQuery = searchQuery.toLowerCase();
     const matchesSearch = 
       o.id.toLowerCase().includes(cleanQuery) ||
@@ -482,8 +486,11 @@ export default function SalesView({
 
         {/* Status Filters */}
         <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-[12px] border border-zinc-800/50">
-          {(["All", "Pending", "Completed", "Cancelled"] as const).map(mode => {
-            const count = mode === "All" ? orders.length : orders.filter(o => o.status === mode).length;
+          {(["All", "Active", "Completed", "Cancelled"] as const).map(mode => {
+            const count = mode === "All" ? orders.length : 
+                          mode === "Active" ? orders.filter(o => !["Served", "Completed", "Cancelled"].includes(o.status)).length :
+                          mode === "Completed" ? orders.filter(o => o.status === "Completed" || o.status === "Served").length :
+                          orders.filter(o => o.status === mode).length;
             return (
               <button
                 key={mode}
@@ -582,16 +589,21 @@ export default function SalesView({
                         <div className="space-y-1.5">
                           <button
                             onClick={() => handleToggleStatus(order.id)}
-                            className={`text-[9.5px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                              order.status === "Completed" 
-                                ? "bg-transparent border border-amber-500/30 text-amber-500 border-amber-500/20/50 hover:bg-transparent border border-amber-500/30" 
+                            disabled={!["Pending", "Completed", "Cancelled"].includes(order.status)}
+                            className={`text-[9.5px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                              order.status === "Completed" || order.status === "Served"
+                                ? "bg-transparent border border-amber-500/30 text-amber-500 border-amber-500/20/50" 
+                                : order.status === "Cancelled"
+                                ? "bg-red-500/10 text-rose-500 border-rose-500/20/50"
                                 : order.status === "Pending"
-                                ? "bg-amber-50 text-amber-700 border-emerald-500/50 hover:bg-amber-100"
-                                : "bg-red-500/10 text-rose-500 border-rose-500/20/50 hover:bg-red-500/20"
+                                ? "bg-amber-50 text-amber-700 border-emerald-500/50 hover:bg-amber-100 cursor-pointer"
+                                : "bg-blue-500/10 text-blue-500 border-blue-500/20/50"
                             }`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${
-                              order.status === "Completed" ? "bg-amber-500 text-zinc-900" : order.status === "Pending" ? "bg-amber-500 text-zinc-900" : "bg-red-500"
+                              order.status === "Completed" || order.status === "Served" ? "bg-amber-500" : 
+                              order.status === "Cancelled" ? "bg-red-500" : 
+                              order.status === "Pending" ? "bg-amber-500" : "bg-blue-500"
                             }`} />
                             <span>{order.status}</span>
                           </button>

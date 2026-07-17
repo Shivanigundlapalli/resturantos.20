@@ -138,6 +138,19 @@ export class OrdersService {
     return this.repository.getOrdersStats();
   }
 
+  async getFinances() {
+    return this.repository.getFinances();
+  }
+
+  async createFinanceEntry(entry: {
+    type: "Income" | "Expense";
+    category: string;
+    amount: number;
+    description: string;
+  }) {
+    return this.repository.createFinanceEntry(entry);
+  }
+
   /**
    * Generates a beautiful HTML thermal receipt for POS printing
    */

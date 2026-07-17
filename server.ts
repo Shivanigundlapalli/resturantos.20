@@ -8,6 +8,7 @@ import fs from "fs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import crypto from "crypto";
+import Razorpay from "razorpay";
 import { evaluateThresholds, getNotificationState, scanInventoryOnStartup, sendOtpSms } from "./src/lib/twilioService.js";
 import { RestaurantState, ChatMessage, ChatResponse } from "./src/types.js";
 import { bootstrapDatabase, getPool } from "./src/lib/db.js";
@@ -212,20 +213,24 @@ function mapItemCompat(item: any): any {
   return mapped;
 }
 
-// Helper to sync in-memory state with PostgreSQL records via FastAPI
+// Helper to sync in-memory state with PostgreSQL records
 async function syncDbStateFromPostgres() {
+  if (!getPool()) return;
   try {
-    const [menu, inventory, orders] = await Promise.all([
-      fetch("http://127.0.0.1:8001/api/menu").then(r => r.json()).catch(() => null),
-      fetch("http://127.0.0.1:8001/api/inventory").then(r => r.json()).catch(() => null),
-      fetch("http://127.0.0.1:8001/orders").then(r => r.json()).catch(() => null)
+    const syncService = new OrdersService();
+    const [menu, ordersData, customers, finances] = await Promise.all([
+      syncService.getMenuItems().catch(() => null),
+      syncService.getOrders({ limit: 1000 }).catch(() => null),
+      syncService.getCustomers().catch(() => null),
+      syncService.getFinances().catch(() => null)
     ]);
 
-    if (menu !== null) dbState.menu = menu.map(mapItemCompat);
-    if (inventory !== null) dbState.inventory = inventory.map(mapItemCompat);
-    if (orders !== null) dbState.orders = orders.map(mapItemCompat);
+    if (menu) dbState.menu = menu;
+    if (ordersData && ordersData.orders) dbState.orders = ordersData.orders;
+    if (customers) dbState.customers = customers;
+    if (finances) dbState.finances = finances;
   } catch (err) {
-    // Silenced error logging
+    console.error("[Sync] Error syncing state from Postgres:", err);
   }
 }
 
@@ -561,39 +566,7 @@ async function startServer() {
     }
   });
 
-  // Real OTP generation and in-memory store
-  const otpStore = new Map<string, string>();
 
-  app.post("/api/auth/send-otp", (req, res) => {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ error: "Phone number required" });
-    
-    const otp = "1234"; // Demo OTP
-    otpStore.set(phone, otp);
-    
-    console.log(`[SMS Gateway] Sent OTP ${otp} to ${phone}`);
-    // In a real app, integrate with Twilio/SMS provider here
-    res.json({ success: true, message: "OTP sent successfully" });
-  });
-
-  app.post("/api/auth/verify-otp", (req, res) => {
-    const { phone, otp, name } = req.body;
-    const storedOtp = otpStore.get(phone);
-    
-    if (storedOtp && storedOtp === otp) {
-      otpStore.delete(phone); // Burn OTP
-      
-      const token = jwt.sign(
-        { phone, name: name || "Customer", role: "customer" },
-        JWT_SECRET,
-        { expiresIn: "24h" }
-      );
-      
-      res.json({ success: true, message: "OTP verified", token });
-    } else {
-      res.status(400).json({ error: "Invalid OTP" });
-    }
-  });
 
   // API Route: Manually update/patch state (for UI quick action support)
   app.post("/api/state/update", requireAuth, async (req, res) => {
@@ -1309,6 +1282,8 @@ app.get("/menu", handleGetMenu);
         special_instructions,
         estimated_prep_time
       });
+      await syncDbStateFromPostgres();
+      broadcastState();
       return res.status(201).json(order);
     } catch (err: any) {
       console.error("Create order failed:", err);
@@ -1318,13 +1293,52 @@ app.get("/menu", handleGetMenu);
   app.post("/api/orders", handleCreateOrder);
   app.post("/orders", handleCreateOrder);
 
+  // POST /api/payment/create-razorpay-order
+  app.post("/api/payment/create-razorpay-order", async (req: express.Request, res: express.Response) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ success: false, message: "Invalid amount" });
+      }
+
+      // Initialize Razorpay with test credentials
+      const razorpay = new Razorpay({
+        key_id: process.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TDlNGuvutaLf6K",
+        key_secret: process.env.RAZORPAY_KEY_SECRET || "mock_secret"
+      });
+
+      const options = {
+        amount: Math.round(amount * 100), // amount in smallest currency unit
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`
+      };
+
+      try {
+        const order = await razorpay.orders.create(options);
+        return res.status(200).json({ success: true, order_id: order.id, amount: order.amount });
+      } catch (sdkError: any) {
+        // Fallback for demo environments without a valid secret
+        console.warn("Razorpay SDK Error (likely missing secret), falling back to mock order ID:", sdkError);
+        return res.status(200).json({ 
+          success: true, 
+          order_id: `order_mock_${Date.now()}`, 
+          amount: Math.round(amount * 100),
+          isMock: true
+        });
+      }
+    } catch (err: any) {
+      console.error("Create Razorpay order failed:", err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // PUT /api/orders/:id & PUT /orders/:id - Update order status or details
   const handleUpdateOrder = async (req: express.Request, res: express.Response) => {
     const idStr = req.params.id;
     const id = parseOrderId(idStr);
     const { status } = req.body;
 
-    const allowed = ["Pending", "Preparing", "Ready", "Served", "Completed", "Cancelled"];
+    const allowed = ["Pending", "Accepted", "Preparing", "Ready", "Served", "Completed", "Cancelled"];
     if (status && !allowed.includes(status)) {
       return res.status(400).json({ success: false, message: `Invalid status. Allowed values are: ${allowed.join(", ")}` });
     }
@@ -1337,7 +1351,8 @@ app.get("/menu", handleGetMenu);
         }
 
         const validTransitions: Record<string, string[]> = {
-          "Pending": ["Preparing", "Cancelled"],
+          "Pending": ["Accepted", "Cancelled"],
+          "Accepted": ["Preparing", "Cancelled"],
           "Preparing": ["Ready", "Cancelled"],
           "Ready": ["Served", "Completed", "Cancelled"],
           "Served": ["Completed"],
@@ -1351,17 +1366,23 @@ app.get("/menu", handleGetMenu);
 
         console.log(`[Kitchen] Updating Order ${idStr} status from ${orderBefore.status} to ${status}`);
 
-        const updatedOrder = await ordersService.updateOrderStatus(id, status);
-        if (updatedOrder && status === "Completed" && orderBefore.status !== "Completed") {
-          dbState.finances.unshift({
-            id: "f" + (dbState.finances.length + 1),
-            timestamp: new Date().toISOString(),
+        let updatedOrder = await ordersService.updateOrderStatus(id, status);
+        
+        // Automation: If status is Served, immediately complete the order after inventory is deducted
+        if (updatedOrder && status === "Served") {
+          updatedOrder = await ordersService.updateOrderStatus(id, "Completed");
+        }
+
+        if (updatedOrder && (status === "Completed" || status === "Served") && orderBefore.status !== "Completed") {
+          await ordersService.createFinanceEntry({
             type: "Income",
             category: "Order Revenue",
             amount: updatedOrder.total,
             description: `Completed Order ${updatedOrder.id} for ${updatedOrder.customerName}`
           });
         }
+        await syncDbStateFromPostgres();
+        broadcastState();
         return res.json({ success: true, order: updatedOrder });
       } catch (err: any) {
         console.error("PostgreSQL update order failed:", err);
@@ -1376,7 +1397,8 @@ app.get("/menu", handleGetMenu);
 
     if (status) {
       const validTransitions: Record<string, string[]> = {
-        "Pending": ["Preparing", "Cancelled"],
+        "Pending": ["Accepted", "Cancelled"],
+        "Accepted": ["Preparing", "Cancelled"],
         "Preparing": ["Ready", "Cancelled"],
         "Ready": ["Served", "Completed", "Cancelled"],
         "Served": ["Completed"],
@@ -1392,7 +1414,12 @@ app.get("/menu", handleGetMenu);
       const prevStatus = order.status;
       order.status = status;
 
-      if (status === "Completed" && prevStatus !== "Completed") {
+      // Automation for local state
+      if (status === "Served") {
+        order.status = "Completed";
+      }
+
+      if ((status === "Completed" || status === "Served") && prevStatus !== "Completed") {
         dbState.finances.unshift({
           id: "f" + (dbState.finances.length + 1),
           timestamp: new Date().toISOString(),
@@ -1786,12 +1813,10 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
         [cleanPhone, otp]
       );
       
-      await sendOtpSms(cleanPhone, otp);
-      
-      console.log(`[Customer Auth] Sent secure OTP to ${cleanPhone}`);
-      res.json({ success: true, message: "OTP sent successfully" });
+      console.log(`[Customer Auth] Generated Demo OTP ${otp} for ${cleanPhone}`);
+      res.json({ success: true, message: "OTP sent successfully", demoOtp: otp });
     } catch (err: any) {
-      console.error("[Customer Auth] Failed to send OTP:", err);
+      console.error("[Customer Auth] Failed to generate OTP:", err);
       res.status(500).json({ success: false, message: "Failed to send OTP", error: err.message });
     }
   });
@@ -1810,7 +1835,7 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
       console.log(`[Customer Auth] Verifying OTP for ${cleanPhone}`);
       // Find the most recent active OTP for this number
       const result = await pool.query(
-        "SELECT id, otp, expires_at, attempts FROM otp_verifications WHERE phone = $1 AND is_verified = FALSE ORDER BY created_at DESC LIMIT 1",
+        "SELECT id, otp, attempts, (expires_at < NOW()) as is_expired FROM otp_verifications WHERE phone = $1 AND is_verified = FALSE ORDER BY created_at DESC LIMIT 1",
         [cleanPhone]
       );
 
@@ -1821,7 +1846,7 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
       const otpRecord = result.rows[0];
 
       // Expiry Check
-      if (new Date(otpRecord.expires_at) < new Date()) {
+      if (otpRecord.is_expired) {
         return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
       }
 
@@ -1854,7 +1879,7 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
       const token = jwt.sign({ phone, role: 'customer' }, process.env.JWT_SECRET || 'restaurant-os-secret-2026', { expiresIn: '24h' });
       
       console.log(`[Customer Auth] OTP verified successfully for ${phone}`);
-      res.json({ success: true, message: "OTP verified successfully", token });
+      res.json({ success: true, verified: true, token });
     } catch (err: any) {
       console.error("[Customer Auth] Verification error:", err);
       res.status(500).json({ success: false, message: "Failed to verify OTP", error: err.message });

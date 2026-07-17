@@ -393,15 +393,15 @@ export async function sendOtpSms(to: string, otp: string) {
   }
   
   try {
-    console.log("[Twilio Service] Sending OTP to $recipient");
+    console.log(`[Twilio Service] Sending OTP to ${recipient}`);
     await client.messages.create({
-      body: "Your RestaurantOS verification code is $otp. It will expire in 5 minutes.",
+      body: `Your RestaurantOS verification code is ${otp}. It will expire in 5 minutes.`,
       from: sender,
       to: recipient,
     });
-    console.log("[Twilio Service] Successfully sent OTP to $recipient");
+    console.log(`[Twilio Service] Successfully sent OTP to ${recipient}`);
   } catch (error) {
-    console.error("[Twilio Service] Failed to send OTP to $recipient:", error);
+    console.error(`[Twilio Service] Failed to send OTP to ${recipient}:`, error);
     throw error;
   }
 }

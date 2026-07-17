@@ -287,6 +287,7 @@ export async function bootstrapDatabase() {
         otp VARCHAR(10) NOT NULL,
         is_verified BOOLEAN DEFAULT FALSE,
         expires_at TIMESTAMP NOT NULL,
+        attempts INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 

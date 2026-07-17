@@ -34,7 +34,6 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
     { id: "menu", label: "Menu", icon: Menu },
     { id: "inventory", label: "Inventory", icon: Warehouse, badge: restaurantState.inventory.filter(i => i.currentQty <= i.reorderLevel).length ? "Low" : undefined },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "orders-board", label: "Live Orders", icon: KanbanSquare, badge: restaurantState.orders.filter(o => o.status === "Pending").length || undefined },
     { id: "sales", label: "Sales List", icon: ShoppingBag },
     { id: "finance", label: "Finance", icon: Coins },
     { id: "analytics", label: "Analytics", icon: LineChart },
