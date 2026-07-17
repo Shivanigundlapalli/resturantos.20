@@ -158,68 +158,68 @@ ${restaurantState.suppliers.map(s => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#FAFAF8] px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
+    <div className="flex-1 flex flex-col h-full bg-zinc-900 px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
       
       {/* Page Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="pl-10 sm:pl-0">
-          <h1 className="text-xl font-bold text-[#062C1A] tracking-tight flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-[#16A34A]" />
+          <h1 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+            <LineChart className="w-5 h-5 text-amber-500" />
             <span className="hidden sm:inline">AI Restaurant Operations Analytics</span>
             <span className="sm:hidden">Analytics</span>
           </h1>
-          <p className="hidden sm:block text-xs text-zinc-500 mt-0.5">Evaluate live margins, trace ingredient profit markups, analyze active safety violations, and compile business summaries.</p>
+          <p className="hidden sm:block text-xs text-zinc-400 mt-0.5">Evaluate live margins, trace ingredient profit markups, analyze active safety violations, and compile business summaries.</p>
         </div>
       </div>
 
       {/* Analytics Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
         {/* Total revenue */}
-        <div className="bg-white border border-zinc-200/60 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Completed Sales Revenue</span>
-              <h2 className="text-2xl font-black text-[#16A34A]">₹{totalRevenue.toLocaleString()}</h2>
+              <h2 className="text-2xl font-black text-amber-500">₹{totalRevenue.toLocaleString()}</h2>
             </div>
-            <span className="w-8 h-8 bg-emerald-50 rounded-lg text-[#16A34A] flex items-center justify-center font-bold">
+            <span className="w-8 h-8 bg-transparent border border-amber-500/30 rounded-lg text-amber-500 flex items-center justify-center font-bold">
               <ArrowUpRight className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-100 uppercase">
+          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
             From {completedOrdersCount} completed orders
           </div>
         </div>
 
         {/* Total Expense */}
-        <div className="bg-white border border-zinc-200/60 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Supplier Disbursements</span>
-              <h2 className="text-2xl font-black text-rose-600">₹{totalExpense.toLocaleString()}</h2>
+              <h2 className="text-2xl font-black text-rose-500">₹{totalExpense.toLocaleString()}</h2>
             </div>
-            <span className="w-8 h-8 bg-rose-50 rounded-lg text-rose-600 flex items-center justify-center font-bold">
+            <span className="w-8 h-8 bg-red-500/10 rounded-lg text-rose-500 flex items-center justify-center font-bold">
               <ArrowDownRight className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-100 uppercase">
+          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
             Total ledger expense payouts
           </div>
         </div>
 
         {/* Net Cashflow status */}
-        <div className="bg-white border border-zinc-200/60 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Net Ledger Cashflow</span>
-              <h2 className={`text-2xl font-black ${profitLoss >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              <h2 className={`text-2xl font-black ${profitLoss >= 0 ? "text-amber-500" : "text-rose-500"}`}>
                 ₹{profitLoss.toLocaleString()}
               </h2>
             </div>
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${profitLoss >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+            <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${profitLoss >= 0 ? "bg-transparent border border-amber-500/30 text-amber-500" : "bg-red-500/10 text-rose-500"}`}>
               <Coins className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-100 uppercase">
+          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
             Net operating surplus
           </div>
         </div>
@@ -229,9 +229,9 @@ ${restaurantState.suppliers.map(s => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         
         {/* Menu item markup list */}
-        <div className="bg-white border border-zinc-200/60 rounded-[18px] p-5 shadow-2xs">
-          <h3 className="font-bold text-sm text-[#062C1A] tracking-tight mb-4 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-[#16A34A]" />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs">
+          <h3 className="font-bold text-sm text-zinc-100 tracking-tight mb-4 flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-amber-500" />
             <span>Recipe Profitability & Markup Index</span>
           </h3>
           <div className="space-y-3.5 max-h-[280px] overflow-y-auto">
@@ -245,14 +245,14 @@ ${restaurantState.suppliers.map(s => {
                 const marginPct = item.price > 0 ? Math.round((margin / item.price) * 100) : 0;
                 
                 return (
-                  <div key={item.id} className="flex justify-between items-center text-xs border-b border-zinc-50 pb-2">
+                  <div key={item.id} className="flex justify-between items-center text-xs border-b border-zinc-800 pb-2">
                     <div>
-                      <span className="font-bold text-zinc-800 block">{item.name}</span>
+                      <span className="font-bold text-zinc-100 block">{item.name}</span>
                       <span className="text-[10px] text-zinc-400 font-semibold block uppercase">{item.category}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-extrabold text-zinc-900 block">₹{item.price} <span className="text-[10px] text-zinc-400 font-medium">(cost: ₹{item.cost})</span></span>
-                      <span className="text-[9.5px] font-black text-emerald-600 block mt-0.5">
+                      <span className="font-extrabold text-zinc-100 block">₹{item.price} <span className="text-[10px] text-zinc-400 font-medium">(cost: ₹{item.cost})</span></span>
+                      <span className="text-[9.5px] font-black text-amber-500 block mt-0.5">
                         {marginPct}% Margin • +₹{margin} Profit
                       </span>
                     </div>
@@ -264,27 +264,27 @@ ${restaurantState.suppliers.map(s => {
         </div>
 
         {/* Safety limits panel */}
-        <div className="bg-white border border-zinc-200/60 rounded-[18px] p-5 shadow-2xs">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs">
           <h3 className="font-bold text-sm text-rose-800 tracking-tight mb-4 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-rose-500" />
             <span>Safety Limits & Stock Outstandings</span>
           </h3>
           <div className="space-y-3.5 max-h-[280px] overflow-y-auto">
-            <div className="flex justify-between text-xs border-b border-zinc-50 pb-2">
-              <span className="text-zinc-500">Low Stock Safety Violations:</span>
-              <span className={`font-black ${lowStockItems.length > 0 ? "text-rose-600" : "text-zinc-800"}`}>{lowStockItems.length} items</span>
+            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
+              <span className="text-zinc-400">Low Stock Safety Violations:</span>
+              <span className={`font-black ${lowStockItems.length > 0 ? "text-rose-500" : "text-zinc-100"}`}>{lowStockItems.length} items</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-50 pb-2">
-              <span className="text-zinc-500">Unresolved Supplier Balances:</span>
-              <span className={`font-black ${pendingPaymentsTotal > 0 ? "text-amber-600" : "text-zinc-800"}`}>₹{pendingPaymentsTotal.toLocaleString()}</span>
+            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
+              <span className="text-zinc-400">Unresolved Supplier Balances:</span>
+              <span className={`font-black ${pendingPaymentsTotal > 0 ? "text-amber-500-hover" : "text-zinc-100"}`}>₹{pendingPaymentsTotal.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-50 pb-2">
-              <span className="text-zinc-500">Registered Guest Accounts:</span>
-              <span className="font-black text-zinc-800">{restaurantState.customers.length} profiles</span>
+            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
+              <span className="text-zinc-400">Registered Guest Accounts:</span>
+              <span className="font-black text-zinc-100">{restaurantState.customers.length} profiles</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-50 pb-2">
-              <span className="text-zinc-500">Logistical Suppliers Linked:</span>
-              <span className="font-black text-zinc-800">{restaurantState.suppliers.length} vendors</span>
+            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
+              <span className="text-zinc-400">Logistical Suppliers Linked:</span>
+              <span className="font-black text-zinc-100">{restaurantState.suppliers.length} vendors</span>
             </div>
           </div>
         </div>
@@ -305,18 +305,18 @@ ${restaurantState.suppliers.map(s => {
               return (
                 <div 
                   key={r.id}
-                  className={`bg-white border p-4.5 rounded-[18px] shadow-2xs transition-all flex flex-col gap-2 relative overflow-hidden ${
-                    isActive ? "border-[#16A34A] bg-emerald-50/10 shadow-xs" : "border-zinc-200/60 hover:border-zinc-300"
+                  className={`bg-zinc-900 border p-4.5 rounded-[18px] shadow-2xs transition-all flex flex-col gap-2 relative overflow-hidden ${
+                    isActive ? "border-emerald-500 bg-transparent border border-amber-500/30/10 shadow-xs" : "border-zinc-800 hover:border-zinc-800"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isActive ? "bg-[#16A34A]/10 text-[#16A34A]" : "bg-zinc-100 text-zinc-500"
+                      isActive ? "bg-transparent border border-amber-500/30 text-amber-500" : "bg-zinc-950 text-zinc-400"
                     }`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-bold text-zinc-900 truncate">{r.title}</h4>
+                      <h4 className="text-xs font-bold text-zinc-100 truncate">{r.title}</h4>
                       <p className="text-[10px] text-zinc-400 line-clamp-1 mt-0.5">{r.desc}</p>
                     </div>
                   </div>
@@ -326,8 +326,8 @@ ${restaurantState.suppliers.map(s => {
                       disabled={isCompiling}
                       className={`text-[9.5px] font-black uppercase px-3 py-1.5 rounded-lg border cursor-pointer transition-all ${
                         isActive 
-                          ? "bg-[#062C1A] text-white border-transparent" 
-                          : "bg-zinc-50 hover:bg-zinc-100 text-zinc-600 border-zinc-200"
+                          ? "bg-zinc-950 text-zinc-100 border-transparent" 
+                          : "bg-zinc-950 hover:bg-zinc-950 text-zinc-300 border-zinc-800"
                       }`}
                     >
                       {isActive && isCompiling ? "Compiling..." : "Compile Audit"}
@@ -342,13 +342,13 @@ ${restaurantState.suppliers.map(s => {
         {/* Report Output Panel */}
         <div className="lg:col-span-3 h-full flex flex-col min-h-[350px]">
           <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-3 pl-1">Live Audit compiler output</div>
-          <div className="bg-white border border-zinc-200/60 rounded-[18px] p-5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden">
             {selectedReport ? (
               <div className="flex-1 flex flex-col justify-between h-full">
-                <div className="overflow-y-auto max-h-[300px] text-xs font-mono whitespace-pre-wrap text-zinc-700 leading-relaxed scrollbar-thin">
+                <div className="overflow-y-auto max-h-[300px] text-xs font-mono whitespace-pre-wrap text-zinc-300 leading-relaxed scrollbar-thin">
                   {reportText}
                 </div>
-                <div className="pt-4 border-t border-zinc-100 flex justify-end">
+                <div className="pt-4 border-t border-zinc-800 flex justify-end">
                   <button
                     onClick={() => {
                       const printWindow = window.open("", "_blank");
@@ -365,7 +365,7 @@ ${restaurantState.suppliers.map(s => {
                         printWindow.print();
                       }
                     }}
-                    className="bg-[#062C1A] hover:bg-[#031d10] text-white font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
+                    className="bg-zinc-950 hover:bg-zinc-900 text-zinc-100 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
                   >
                     Print Audit Document
                   </button>

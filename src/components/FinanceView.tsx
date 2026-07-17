@@ -46,21 +46,21 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#FAFAF8] px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
+    <div className="flex-1 flex flex-col h-full bg-zinc-900 px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
       {/* View Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="pl-10 sm:pl-0">
-          <h1 className="text-xl font-bold text-[#062C1A] tracking-tight flex items-center gap-2">
-            <Coins className="w-5 h-5 text-[#16A34A]" />
+          <h1 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+            <Coins className="w-5 h-5 text-amber-500" />
             <span className="hidden sm:inline">Operational Cash Flow Ledger</span>
             <span className="sm:hidden">Finance</span>
           </h1>
-          <p className="hidden sm:block text-xs text-zinc-500 mt-0.5">High-density spreadsheet tracking credits (sales, order bills) and debits (supplier settlements, rent, kitchen operations).</p>
+          <p className="hidden sm:block text-xs text-zinc-400 mt-0.5">High-density spreadsheet tracking credits (sales, order bills) and debits (supplier settlements, rent, kitchen operations).</p>
         </div>
         
         <button
           onClick={handleLogManualTransaction}
-          className="bg-[#16A34A] hover:bg-[#117534] text-white font-bold text-xs px-3 sm:px-4 py-2 rounded-[12px] flex items-center gap-1.5 shadow-sm shadow-emerald-600/10 transition-all cursor-pointer active:scale-95 animate-fade-in shrink-0"
+          className="bg-amber-500 text-zinc-900 hover:bg-amber-600 font-bold text-xs px-3 sm:px-4 py-2 rounded-[12px] flex items-center gap-1.5 shadow-none shadow-amber-500/10 transition-all cursor-pointer active:scale-95 animate-fade-in shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Manual Entry Log</span>
@@ -68,34 +68,34 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
       </div>
 
       {/* High-density account sheet balance summary */}
-      <div className="bg-white border border-zinc-200/60 rounded-[18px] p-4.5 mb-5 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="px-4 py-2 border-r border-zinc-150">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-4.5 mb-5 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="px-4 py-2 border-r border-zinc-800">
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Cumulative Income (Credits)</span>
-          <div className="text-lg font-black text-[#16A34A] mt-0.5">₹{totalIncome.toLocaleString()}</div>
+          <div className="text-lg font-black text-amber-500 mt-0.5">₹{totalIncome.toLocaleString()}</div>
         </div>
-        <div className="px-4 py-2 border-r border-zinc-150">
+        <div className="px-4 py-2 border-r border-zinc-800">
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Cumulative Expenses (Debits)</span>
-          <div className="text-lg font-black text-rose-600 mt-0.5">₹{totalExpense.toLocaleString()}</div>
+          <div className="text-lg font-black text-rose-500 mt-0.5">₹{totalExpense.toLocaleString()}</div>
         </div>
         <div className="px-4 py-2">
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Net Operating Capital</span>
-          <div className={`text-lg font-black mt-0.5 ${netCashFlow >= 0 ? "text-[#16A34A]" : "text-rose-700"}`}>
+          <div className={`text-lg font-black mt-0.5 ${netCashFlow >= 0 ? "text-amber-500" : "text-rose-500"}`}>
             ₹{netCashFlow.toLocaleString()}
           </div>
         </div>
       </div>
 
       {/* Filter and toggle options */}
-      <div className="flex items-center justify-between bg-white border border-zinc-200/60 p-3.5 rounded-[18px] mb-5 shadow-xs">
-        <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-[12px] border border-zinc-200/50">
+      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3.5 rounded-[18px] mb-5 shadow-xs">
+        <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-[12px] border border-zinc-800/50">
           {(["All", "Income", "Expense"] as const).map(type => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
               className={`px-4 py-1.5 rounded-[10px] text-xs font-bold transition-all ${
                 filterType === type 
-                  ? "bg-[#062C1A] text-white shadow-xs" 
-                  : "text-zinc-500 hover:text-[#062C1A]"
+                  ? "bg-zinc-950 text-zinc-100 shadow-xs" 
+                  : "text-zinc-400 hover:text-zinc-100"
               }`}
             >
               {type === "All" ? "Full Ledger" : type === "Income" ? "Credits Only" : "Debits Only"}
@@ -110,10 +110,10 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
       </div>
 
       {/* Main ledger sheets sheet */}
-      <div className="bg-white border border-zinc-200/60 rounded-[18px] overflow-hidden shadow-xs">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-left font-sans text-xs">
-            <thead className="bg-[#062C1A]/5 text-[#062C1A] font-bold uppercase tracking-wider text-[10px]">
+          <table className="min-w-full divide-y divide-zinc-800 text-left font-sans text-xs">
+            <thead className="bg-zinc-950/5 text-zinc-100 font-bold uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-5 py-3.5">Transaction ID</th>
                 <th className="px-5 py-3.5">Date & Timestamp</th>
@@ -123,7 +123,7 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
                 <th className="px-5 py-3.5 text-right">Amount (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 bg-white font-medium text-zinc-700">
+            <tbody className="divide-y divide-zinc-800 bg-zinc-900 font-medium text-zinc-300">
               {filteredFinances.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-8 text-center text-zinc-400 font-semibold">
@@ -135,20 +135,20 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
                   const isIncome = entry.type === "Income";
 
                   return (
-                    <tr key={entry.id} className="hover:bg-zinc-50/40 transition-colors">
+                    <tr key={entry.id} className="hover:bg-zinc-950/40 transition-colors">
                       {/* ID */}
-                      <td className="px-5 py-4 font-bold text-zinc-900 font-mono text-xs">{entry.id}</td>
+                      <td className="px-5 py-4 font-bold text-zinc-100 font-mono text-xs">{entry.id}</td>
 
                       {/* Date */}
-                      <td className="px-5 py-4 text-zinc-500 font-mono text-[10px]">
+                      <td className="px-5 py-4 text-zinc-400 font-mono text-[10px]">
                         {new Date(entry.timestamp).toLocaleString()}
                       </td>
 
                       {/* Category */}
                       <td className="px-5 py-4">
                         <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded border ${
-                          entry.category === "Order Revenue" ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/15" :
-                          entry.category === "Supplier Payment" ? "bg-amber-500/10 text-amber-700 border-amber-500/15" :
+                          entry.category === "Order Revenue" ? "bg-transparent border border-amber-500/30 text-amber-500 border-emerald-500/15" :
+                          entry.category === "Supplier Payment" ? "bg-transparent border border-amber-500/30 text-amber-700 border-emerald-500/15" :
                           "bg-blue-500/10 text-blue-700 border-blue-500/15"
                         }`}>
                           {entry.category}
@@ -156,18 +156,18 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
                       </td>
 
                       {/* Description */}
-                      <td className="px-5 py-4 text-zinc-700 font-medium max-w-sm truncate" title={entry.description}>
+                      <td className="px-5 py-4 text-zinc-300 font-medium max-w-sm truncate" title={entry.description}>
                         {entry.description}
                       </td>
 
                       {/* Flow status */}
                       <td className="px-5 py-4">
                         <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          isIncome ? "text-[#16A34A]" : "text-rose-600"
+                          isIncome ? "text-amber-500" : "text-rose-500"
                         }`}>
                           {isIncome ? (
                             <>
-                              <ArrowUpRight className="w-3 h-3 text-[#16A34A]" />
+                              <ArrowUpRight className="w-3 h-3 text-amber-500" />
                               <span>Credit</span>
                             </>
                           ) : (
@@ -181,7 +181,7 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
 
                       {/* Amount */}
                       <td className={`px-5 py-4 text-right font-black font-mono text-xs ${
-                        isIncome ? "text-[#16A34A] font-extrabold" : "text-rose-700"
+                        isIncome ? "text-amber-500 font-extrabold" : "text-rose-500"
                       }`}>
                         {isIncome ? "+" : "-"} ₹{entry.amount.toLocaleString()}
                       </td>

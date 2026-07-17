@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { X, Save, Image as ImageIcon, Plus, Wand2, Upload, Loader2 } from "lucide-react";
+import { X, Save, Image as ImageIcon, Plus, Wand2, Upload, Loader2, Info, Leaf, Activity, Settings as SettingsIcon, Eye, Sparkles, DollarSign } from "lucide-react";
 import { MenuItem, Category } from "../../types";
 import AiImageGenerator from "./AiImageGenerator";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../lib/supabaseClient";
 import imageCompression from "browser-image-compression";
+import { motion } from "motion/react";
+
+type TabType = "basic" | "ai" | "nutrition" | "settings" | "preview";
 
 export default function MenuItemEditor({ item, categories, onClose, onSave }: { item: Partial<MenuItem>, categories: Category[], onClose: () => void, onSave: () => void }) {
+  const [activeTab, setActiveTab] = useState<TabType>("basic");
+  
   const [formData, setFormData] = useState<Partial<MenuItem>>({
     name: "",
     description: "",
@@ -19,7 +24,6 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
     dietary_preference: "Veg",
     spice_level: "Mild",
     calories: 0,
-    preparation_time: 15,
     tags: [],
     timing_slot: "All Day",
     stock_type: "Unlimited",
@@ -32,6 +36,10 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
   const [isSaving, setIsSaving] = useState(false);
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // AI States
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [isSuggestingPrice, setIsSuggestingPrice] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,22 +52,14 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
 
     setIsUploading(true);
     try {
-      const options = {
-        maxSizeMB: 0.5,
-        maxWidthOrHeight: 1200,
-        useWebWorker: true
-      };
-      
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true };
       const compressedFile = await imageCompression(file, options);
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       
-      const { data, error: uploadError } = await supabase.storage
-        .from('menu-images')
-        .upload(fileName, compressedFile, { cacheControl: '3600', upsert: false });
-
+      const { data, error: uploadError } = await supabase!.storage.from('menu-images').upload(fileName, compressedFile, { cacheControl: '3600', upsert: false });
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('menu-images').getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase!.storage.from('menu-images').getPublicUrl(fileName);
       setFormData({ ...formData, image: publicUrl });
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -69,11 +69,51 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
     }
   };
 
+  const handleGenerateDescription = async () => {
+    if (!formData.name) return alert("Please enter a dish name first.");
+    setIsGeneratingDesc(true);
+    try {
+      const categoryName = categories.find(c => c.id === formData.category_id)?.name || "";
+      const res = await fetch("/api/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ name: formData.name, category: categoryName })
+      });
+      const data = await res.json();
+      if (data.success && data.description) {
+        setFormData({ ...formData, description: data.description });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingDesc(false);
+    }
+  };
+
+  const handleSuggestPrice = async () => {
+    if (!formData.cost || formData.cost <= 0) return alert("Please enter a valid cost first.");
+    setIsSuggestingPrice(true);
+    try {
+      const categoryName = categories.find(c => c.id === formData.category_id)?.name || "";
+      const res = await fetch("/api/suggest-price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ cost: formData.cost, category: categoryName })
+      });
+      const data = await res.json();
+      if (data.success && data.suggestedPrice) {
+        setFormData({ ...formData, price: data.suggestedPrice });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSuggestingPrice(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
-    // Sync dietary preference to isVeg for legacy components
     const mappedVeg = ["Veg", "Vegan", "Jain"].includes(formData.dietary_preference || "Veg");
     const dataToSave = { ...formData, isVeg: mappedVeg };
 
@@ -84,15 +124,10 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
     try {
       const res = await fetch(url, {
         method,
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(dataToSave)
       });
-      if (res.ok) {
-        onSave();
-      }
+      if (res.ok) onSave();
     } catch (err) {
       console.error(err);
     } finally {
@@ -107,332 +142,379 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
     }
   };
 
-  const handleRemoveTag = (tag: string) => {
-    setFormData({ ...formData, tags: formData.tags?.filter(t => t !== tag) });
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData({ ...formData, tags: formData.tags?.filter(t => t !== tagToRemove) });
   };
 
   return (
     <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm z-[100] flex justify-end">
-      <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-        <div className="p-6 border-b border-zinc-200 flex justify-between items-center bg-white sticky top-0 z-10">
+      <div className="w-full max-w-3xl bg-zinc-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
+        <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl font-black text-zinc-900 tracking-tight">{formData.id ? 'Edit Dish' : 'Create New Dish'}</h2>
-            <p className="text-sm text-zinc-500 font-medium">Fill in the details for this menu item.</p>
+            <h2 className="text-2xl font-black text-zinc-100 tracking-tight">{formData.id ? 'Edit Menu Item' : 'Create Menu Item'}</h2>
+            <p className="text-sm text-zinc-400 font-medium">Enterprise ERP Menu Configuration</p>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-950 rounded-full transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
+
+        {/* Tabs */}
+        <div className="flex px-6 space-x-1 bg-zinc-950 border-b border-zinc-800 overflow-x-auto">
+          {[
+            { id: "basic", label: "Basic Info", icon: Info },
+            { id: "ai", label: "AI & Pricing", icon: Sparkles },
+            { id: "nutrition", label: "Nutrition & Allergens", icon: Activity },
+            { id: "settings", label: "Availability", icon: SettingsIcon },
+            { id: "preview", label: "Customer Preview", icon: Eye }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id ? "border-emerald-500 text-amber-500 bg-zinc-900" : "border-transparent text-zinc-400 hover:text-zinc-300 hover:bg-zinc-950"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
         
-        <div className="flex-1 overflow-y-auto p-8 bg-zinc-50/50">
-          <form id="menu-item-form" onSubmit={handleSave} className="space-y-8 max-w-xl mx-auto">
+        <div className="flex-1 overflow-y-auto p-8 bg-zinc-950">
+          <form id="menu-item-form" onSubmit={handleSave} className="max-w-2xl mx-auto h-full">
             
-            {/* Basic Info */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Basic Info</h3>
-              
-              <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-2">Dish Name *</label>
-                <input 
-                  type="text" required
-                  value={formData.name || ""} 
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  placeholder="e.g. Classic Margherita Pizza"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Category *</label>
-                  <select 
-                    required
-                    value={formData.category_id || ""}
-                    onChange={e => setFormData({...formData, category_id: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium appearance-none"
-                  >
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Preparation Time (mins)</label>
-                  <input 
-                    type="number" 
-                    value={formData.preparation_time || 15} 
-                    onChange={e => setFormData({...formData, preparation_time: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-2">Short Description</label>
-                <input 
-                  type="text" 
-                  value={formData.short_description || ""} 
-                  onChange={e => setFormData({...formData, short_description: e.target.value})}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  placeholder="A short punchy tagline"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-2">Full Description</label>
-                <textarea 
-                  value={formData.description || ""} 
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium min-h-[100px]"
-                />
-              </div>
-            </section>
-
-            {/* Pricing */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Pricing & Tax</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Price ($) *</label>
-                  <input 
-                    type="number" step="0.01" required
-                    value={formData.price || 0} 
-                    onChange={e => setFormData({...formData, price: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold text-emerald-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Discounted Price ($)</label>
-                  <input 
-                    type="number" step="0.01"
-                    value={formData.discounted_price || ""} 
-                    onChange={e => setFormData({...formData, discounted_price: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                    placeholder="Optional"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Cost ($)</label>
-                  <input 
-                    type="number" step="0.01"
-                    value={formData.cost || 0} 
-                    onChange={e => setFormData({...formData, cost: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">GST / Tax (%)</label>
-                  <input 
-                    type="number" step="0.1"
-                    value={formData.gst_percentage || 0} 
-                    onChange={e => setFormData({...formData, gst_percentage: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Characteristics */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Characteristics</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Dietary Preference</label>
-                  <select 
-                    value={formData.dietary_preference || "Veg"}
-                    onChange={e => setFormData({...formData, dietary_preference: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium appearance-none"
-                  >
-                    <option value="Veg">Vegetarian</option>
-                    <option value="Non Veg">Non-Vegetarian</option>
-                    <option value="Vegan">Vegan</option>
-                    <option value="Egg">Contains Egg</option>
-                    <option value="Jain">Jain</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Spice Level</label>
-                  <select 
-                    value={formData.spice_level || "Mild"}
-                    onChange={e => setFormData({...formData, spice_level: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium appearance-none"
-                  >
-                    <option value="None">None</option>
-                    <option value="Mild">Mild</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Spicy">Spicy</option>
-                    <option value="Extra Spicy">Extra Spicy</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-2">Tags</label>
-                <div className="flex gap-2 mb-3 flex-wrap">
-                  {formData.tags?.map(tag => (
-                    <div key={tag} className="flex items-center gap-1 bg-zinc-100 text-zinc-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-zinc-200">
-                      {tag}
-                      <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-red-500 ml-1"><X className="w-3 h-3" /></button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={tagInput}
-                    onChange={e => setTagInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                    className="flex-1 px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-medium text-sm"
-                    placeholder="Add tag (e.g. Best Seller)"
-                  />
-                  <button type="button" onClick={handleAddTag} className="bg-zinc-200 hover:bg-zinc-300 text-zinc-700 px-4 rounded-xl text-sm font-bold transition-colors">
-                    Add
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* Inventory & Timing */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Inventory & Availability</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Stock Type</label>
-                  <select 
-                    value={formData.stock_type || "Unlimited"}
-                    onChange={e => setFormData({...formData, stock_type: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium appearance-none"
-                  >
-                    <option value="Unlimited">Unlimited</option>
-                    <option value="Limited">Limited Quantity</option>
-                  </select>
-                </div>
-                {formData.stock_type === "Limited" && (
+            {activeTab === "basic" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <section className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-none space-y-4">
+                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Core Details</h3>
                   <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-2">Current Stock</label>
+                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Dish Name *</label>
                     <input 
-                      type="number" 
-                      value={formData.current_stock || 0} 
-                      onChange={e => setFormData({...formData, current_stock: Number(e.target.value)})}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
+                      type="text" required value={formData.name || ""} 
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium"
                     />
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Timing Slot</label>
-                  <select 
-                    value={formData.timing_slot || "All Day"}
-                    onChange={e => setFormData({...formData, timing_slot: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium appearance-none"
-                  >
-                    <option value="All Day">All Day</option>
-                    <option value="Breakfast">Breakfast (6 AM - 11 AM)</option>
-                    <option value="Lunch">Lunch (11 AM - 4 PM)</option>
-                    <option value="Dinner">Dinner (4 PM - 11 PM)</option>
-                  </select>
-                </div>
-              </div>
-            </section>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Category *</label>
+                      <select 
+                        required value={formData.category_id || ""}
+                        onChange={e => setFormData({...formData, category_id: e.target.value})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                      >
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Dietary Preference</label>
+                      <select 
+                        value={formData.dietary_preference || "Veg"}
+                        onChange={e => setFormData({...formData, dietary_preference: e.target.value})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                      >
+                        <option value="Veg">Vegetarian</option>
+                        <option value="Non Veg">Non-Vegetarian</option>
+                        <option value="Vegan">Vegan</option>
+                        <option value="Egg">Contains Egg</option>
+                        <option value="Jain">Jain</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
 
-            {/* Media */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Media</h3>
-              <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-2">Main Image URL</label>
-                <div className="flex gap-4 items-start">
+                <section className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-none space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Product Image</h3>
+                  </div>
+                  
                   {formData.image ? (
-                    <img src={formData.image} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-zinc-200 shadow-sm" />
+                    <div className="relative group rounded-xl overflow-hidden aspect-video border border-zinc-800">
+                      <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-zinc-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button type="button" onClick={() => setIsAiGeneratorOpen(true)} className="p-2 bg-emerald-500 text-zinc-100 rounded-lg hover:bg-emerald-500 font-medium text-sm flex items-center gap-2 shadow-lg">
+                          <Wand2 className="w-4 h-4" /> AI Generate
+                        </button>
+                        <label className="p-2 bg-zinc-900 text-zinc-100 rounded-lg hover:bg-zinc-950 font-medium text-sm flex items-center gap-2 cursor-pointer shadow-lg">
+                          <Upload className="w-4 h-4" /> Upload
+                          <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                        </label>
+                        <button type="button" onClick={() => setFormData({...formData, image: ""})} className="p-2 bg-red-500 text-zinc-100 rounded-lg hover:bg-red-500 shadow-lg">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-xl bg-zinc-100 flex items-center justify-center border border-zinc-200 border-dashed text-zinc-400">
-                      <ImageIcon className="w-8 h-8" />
+                    <div className="border-2 border-dashed border-zinc-800 rounded-xl p-8 text-center bg-zinc-950 flex flex-col items-center gap-4">
+                      <div className="p-4 bg-zinc-950 rounded-full text-zinc-400">
+                        <ImageIcon className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-zinc-300 mb-1">No image uploaded</p>
+                        <p className="text-xs text-zinc-400 mb-4">High quality images increase orders by 30%</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <label className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg font-medium text-sm hover:bg-zinc-950 cursor-pointer shadow-none flex items-center gap-2 transition-colors">
+                          {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                          {isUploading ? "Uploading..." : "Upload Photo"}
+                          <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                        </label>
+                        <button type="button" onClick={() => setIsAiGeneratorOpen(true)} className="px-4 py-2 bg-emerald-500 text-zinc-100 rounded-lg font-medium text-sm hover:bg-emerald-500 shadow-none shadow-amber-500/10 flex items-center gap-2 transition-colors">
+                          <Wand2 className="w-4 h-4" /> AI Generate Image
+                        </button>
+                      </div>
                     </div>
                   )}
-                  <div className="flex-1 flex gap-2">
-                    <input 
-                      type="url" 
-                      value={formData.image || ""} 
-                      onChange={e => setFormData({...formData, image: e.target.value})}
-                      className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-                      placeholder="https://..."
-                    />
-                    <div className="relative">
-                      <input 
-                        type="file" 
-                        accept=".jpg,.jpeg,.png,.webp" 
-                        onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                        disabled={isUploading}
-                        title="Upload Image"
-                      />
-                      <button
-                        type="button"
-                        className="px-4 py-3 h-full bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm disabled:opacity-50"
-                        disabled={isUploading}
+                </section>
+              </div>
+            )}
+
+            {activeTab === "ai" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <section className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-2xl border border-amber-500/20 shadow-none space-y-6">
+                  <div className="flex items-center gap-2 text-amber-500 mb-2">
+                    <Sparkles className="w-5 h-5" />
+                    <h3 className="font-bold">AI Assistant Tools</h3>
+                  </div>
+
+                  {/* AI Description */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-emerald-900">Marketing Description</label>
+                      <button 
+                        type="button" 
+                        onClick={handleGenerateDescription}
+                        disabled={isGeneratingDesc}
+                        className="text-xs bg-emerald-500 text-zinc-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-emerald-500/80 disabled:opacity-50"
                       >
-                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                        Upload
+                        {isGeneratingDesc ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                        Generate Copy
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsAiGeneratorOpen(true)}
-                      className="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap shadow-sm"
-                    >
-                      <Wand2 className="w-4 h-4" />
-                      AI Generate
-                    </button>
+                    <textarea 
+                      value={formData.description || ""} 
+                      onChange={e => setFormData({...formData, description: e.target.value})}
+                      className="w-full px-4 py-3 bg-zinc-900 border border-amber-500/20 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium min-h-[120px]"
+                      placeholder="Rich, appetizing description..."
+                    />
                   </div>
-                </div>
-                {formData.images && formData.images.length > 0 && (
-                  <div className="mt-4">
-                    <label className="block text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-wider">Gallery Images</label>
-                    <div className="flex gap-3 overflow-x-auto pb-2">
-                      {formData.images.map((imgUrl, idx) => (
-                        <div key={idx} className="relative group w-20 h-20 shrink-0">
-                          <img src={imgUrl} className="w-full h-full object-cover rounded-xl border border-zinc-200 shadow-sm" />
-                          <button 
-                            type="button" 
-                            onClick={() => setFormData({...formData, images: formData.images?.filter(u => u !== imgUrl)})} 
-                            className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity border border-zinc-100"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
+
+                  {/* AI Pricing */}
+                  <div className="space-y-3 pt-4 border-t border-amber-500/20/60">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-emerald-900">Intelligent Pricing</label>
+                      <button 
+                        type="button" 
+                        onClick={handleSuggestPrice}
+                        disabled={isSuggestingPrice}
+                        className="text-xs bg-emerald-500 text-zinc-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-emerald-500/80 disabled:opacity-50"
+                      >
+                        {isSuggestingPrice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <DollarSign className="w-3.5 h-3.5" />}
+                        Suggest Retail Price
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-amber-500 mb-1">Food Cost ($)</label>
+                        <input 
+                          type="number" step="0.01"
+                          value={formData.cost || 0} 
+                          onChange={e => setFormData({...formData, cost: Number(e.target.value)})}
+                          className="w-full px-4 py-2.5 bg-zinc-900 border border-amber-500/20 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-amber-500 mb-1">Selling Price ($) *</label>
+                        <input 
+                          type="number" step="0.01" required
+                          value={formData.price || 0} 
+                          onChange={e => setFormData({...formData, price: Number(e.target.value)})}
+                          className="w-full px-4 py-2.5 bg-zinc-900 border border-amber-500/20 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-bold text-amber-500"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
-                <p className="text-xs text-zinc-500 mt-3">Using Supabase Storage for automatic image hosting and compression.</p>
+                </section>
               </div>
-            </section>
+            )}
+
+            {activeTab === "nutrition" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <section className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-none space-y-4">
+                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Health & Diet</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Calories (kcal)</label>
+                      <input 
+                        type="number" 
+                        value={formData.calories || 0} 
+                        onChange={e => setFormData({...formData, calories: Number(e.target.value)})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Spice Level</label>
+                      <select 
+                        value={formData.spice_level || "Mild"}
+                        onChange={e => setFormData({...formData, spice_level: e.target.value})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                      >
+                        <option value="None">None</option>
+                        <option value="Mild">Mild</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Spicy">Spicy</option>
+                        <option value="Extra Spicy">Extra Spicy</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Allergens & Tags</label>
+                    <div className="flex gap-2 mb-3">
+                      <input 
+                        type="text" 
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                        className="flex-1 px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium text-sm"
+                        placeholder="e.g. Contains Nuts, Gluten-Free"
+                      />
+                      <button type="button" onClick={handleAddTag} className="px-4 py-2.5 bg-zinc-900 text-zinc-100 rounded-xl hover:bg-zinc-900 font-medium text-sm flex items-center gap-2">
+                        <Plus className="w-4 h-4" /> Add
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags?.map(tag => (
+                        <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-semibold text-zinc-300">
+                          {tag}
+                          <button type="button" onClick={() => handleRemoveTag(tag)} className="text-zinc-400 hover:text-rose-500"><X className="w-3.5 h-3.5" /></button>
+                        </span>
+                      ))}
+                      {(!formData.tags || formData.tags.length === 0) && (
+                        <span className="text-xs text-zinc-400 font-medium">No tags added</span>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <section className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-none space-y-4">
+                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-2">Lifecycle & Availability</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Publish Status</label>
+                      <select 
+                        value={formData.status || "Draft"}
+                        onChange={e => setFormData({...formData, status: e.target.value as any})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                      >
+                        <option value="Draft">📝 Draft (Hidden)</option>
+                        <option value="Available">🟢 Available (Live)</option>
+                        <option value="Sold Out">🔴 Sold Out</option>
+                        <option value="Seasonal">🍂 Seasonal</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-zinc-300 mb-2">Timing Slot</label>
+                      <select 
+                        value={formData.timing_slot || "All Day"}
+                        onChange={e => setFormData({...formData, timing_slot: e.target.value})}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                      >
+                        <option value="All Day">All Day</option>
+                        <option value="Breakfast">Breakfast (6am - 11am)</option>
+                        <option value="Lunch">Lunch (11am - 4pm)</option>
+                        <option value="Dinner">Dinner (4pm - 11pm)</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === "preview" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="bg-zinc-950 p-8 rounded-3xl flex justify-center items-center">
+                  {/* Mock Mobile Device */}
+                  <div className="w-[320px] bg-zinc-900 rounded-[2rem] shadow-2xl overflow-hidden border-8 border-zinc-800 relative">
+                    <div className="h-6 bg-zinc-900 absolute top-0 w-full z-20 flex justify-center rounded-b-xl">
+                      <div className="w-16 h-4 bg-zinc-950 rounded-b-xl"></div>
+                    </div>
+                    
+                    {/* Rendered Dish as seen by Customer */}
+                    <div className="pt-10 pb-6 px-4">
+                      <div className="rounded-2xl overflow-hidden bg-zinc-950 shadow-none border border-zinc-800 mb-4">
+                        <div className="aspect-video relative bg-zinc-900">
+                          {formData.image ? (
+                            <img src={formData.image} alt={formData.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-400">No Image</div>
+                          )}
+                          {["Veg", "Vegan", "Jain"].includes(formData.dietary_preference || "Veg") ? (
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-zinc-900 rounded flex items-center justify-center p-0.5 shadow-none border border-emerald-500">
+                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                            </div>
+                          ) : (
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-zinc-900 rounded flex items-center justify-center p-0.5 shadow-none border border-rose-500">
+                              <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-rose-600"></div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-zinc-100 text-lg leading-tight mb-1">{formData.name || "Dish Name"}</h4>
+                          <div className="text-amber-500 font-bold mb-2">₹{formData.price || "0.00"}</div>
+                          {formData.description && (
+                            <p className="text-xs text-zinc-400 mb-3 line-clamp-2">{formData.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {formData.tags?.map(t => (
+                              <span key={t} className="text-[10px] bg-zinc-950 text-zinc-300 px-2 py-0.5 rounded-full border border-zinc-800 font-medium">{t}</span>
+                            ))}
+                          </div>
+                          <button type="button" className="w-full py-2 bg-transparent border border-amber-500/30 text-amber-500 font-bold text-sm rounded-xl border border-amber-500/20 hover:bg-transparent border border-amber-500/30">
+                            ADD
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </div>
 
-        <div className="p-6 border-t border-zinc-200 bg-white flex gap-4 sticky bottom-0">
-          <button 
-            type="button"
-            onClick={onClose}
-            className="px-6 py-3 border border-zinc-200 rounded-xl text-zinc-600 font-bold hover:bg-zinc-50 transition-colors"
-          >
+        <div className="p-6 border-t border-zinc-800 bg-zinc-900 flex justify-end gap-3 sticky bottom-0 z-10">
+          <button type="button" onClick={onClose} className="px-6 py-2.5 text-sm font-bold text-zinc-300 hover:bg-zinc-950 rounded-xl transition-colors">
             Cancel
           </button>
           <button 
-            type="submit"
+            type="submit" 
             form="menu-item-form"
             disabled={isSaving}
-            className="flex-1 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="px-6 py-2.5 text-sm font-bold bg-emerald-500 text-zinc-100 rounded-xl hover:bg-emerald-500 shadow-lg shadow-amber-500/10 transition-all flex items-center gap-2 disabled:opacity-50"
           >
-            {isSaving ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : <Save className="w-5 h-5" />}
-            {isSaving ? 'Saving...' : 'Save Menu Item'}
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {formData.id ? 'Update Dish' : 'Publish Dish'}
           </button>
         </div>
       </div>
-      
-      <AiImageGenerator 
+
+      <AiImageGenerator
         isOpen={isAiGeneratorOpen}
+        initialFoodName={formData.name || ""}
         onClose={() => setIsAiGeneratorOpen(false)}
-        initialFoodName={formData.name ? `${formData.name}. Category: ${categories.find(c => c.id === formData.category_id)?.name || 'General'}. ${formData.description || ''}` : ""}
-        onSelectImage={(url, type) => {
-          if (type === 'cover') setFormData({ ...formData, image: url });
-          else if (type === 'gallery') setFormData({ ...formData, images: [...(formData.images || []), url] });
+        onSelectImage={(url) => {
+          setFormData({ ...formData, image: url });
           setIsAiGeneratorOpen(false);
         }}
       />

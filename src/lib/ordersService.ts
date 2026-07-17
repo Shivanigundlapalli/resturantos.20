@@ -52,7 +52,7 @@ export class OrdersService {
     return this.repository.getOrders(filters);
   }
 
-  async getOrderById(id: number): Promise<Order | null> {
+  async getOrderById(id: number | string): Promise<Order | null> {
     return this.repository.getOrderById(id);
   }
 

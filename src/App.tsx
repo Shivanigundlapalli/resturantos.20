@@ -9,6 +9,8 @@ import SalesView from "./components/SalesView";
 import FinanceView from "./components/FinanceView";
 import AnalyticsView from "./components/AnalyticsView";
 import SettingsView from "./components/SettingsView";
+import DashboardView from "./components/DashboardView";
+import OrdersKanban from "./components/OrdersKanban";
 import LoginView from "./components/LoginView";
 import RoleSelectionView from "./components/RoleSelectionView";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -82,6 +84,14 @@ export default function App() {
           (payload) => {
             console.log('Realtime Order Update received!', payload);
             fetchState(); // Refetch full state when order changes
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'inventory' },
+          (payload) => {
+            console.log('Realtime Inventory Update received!', payload);
+            fetchState();
           }
         )
         .subscribe();
@@ -236,8 +246,8 @@ export default function App() {
   const renderMainContent = () => {
     if (isLoadingState) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-[#FAFAF8] text-zinc-400 gap-3 pl-0 lg:pl-0">
-          <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="flex-1 flex flex-col items-center justify-center bg-lux-card text-lux-text-muted gap-3 pl-0 lg:pl-0">
+          <RefreshCw className="w-8 h-8 animate-spin text-lux-status-available" />
           <p className="text-xs font-semibold">Booting Restaurant AI Operating System...</p>
         </div>
       );
@@ -282,8 +292,7 @@ export default function App() {
       case "sales":
         return (
           <ErrorBoundary>
-            <SalesView 
-              orders={restaurantState.orders} 
+            <SalesView               orders={restaurantState.orders} 
               menu={restaurantState.menu}
               customers={restaurantState.customers}
               inventory={restaurantState.inventory}
@@ -291,6 +300,37 @@ export default function App() {
               onUpdateOrders={(orders: Order[]) => syncStateWithServer({ ...restaurantState, orders })}
               onAddLog={handleAddFinancialLog}
               setActiveTab={setActiveTab}
+            />
+          </ErrorBoundary>
+        );
+      case "dashboard":
+        return (
+          <ErrorBoundary>
+            <DashboardView 
+              restaurantState={restaurantState}
+              setActiveTab={setActiveTab}
+            />
+          </ErrorBoundary>
+        );
+      case "orders-board":
+        return (
+          <ErrorBoundary>
+            <OrdersKanban 
+              orders={restaurantState.orders}
+              onUpdateStatus={async (id, status) => {
+                try {
+                  const res = await fetch(`/api/orders/${id.replace('ORD-', '').replace('#', '')}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status })
+                  });
+                  if (res.ok) {
+                    fetchState();
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
             />
           </ErrorBoundary>
         );
@@ -321,8 +361,8 @@ export default function App() {
         );
       default:
         return (
-          <div className="flex-1 flex items-center justify-center bg-[#FAFAF8]">
-            <p className="text-zinc-400 text-xs font-medium">Module under development.</p>
+          <div className="flex-1 flex items-center justify-center bg-lux-card">
+            <p className="text-lux-text-muted text-xs font-medium">Module under development.</p>
           </div>
         );
     }
@@ -353,7 +393,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden bg-[#FAFAF8] antialiased">
+    <div className="w-screen h-screen flex overflow-hidden bg-lux-card antialiased">
       {/* Left Sidebar (handles its own mobile drawer logic) */}
       <Sidebar 
         activeTab={activeTab} 

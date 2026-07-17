@@ -16,7 +16,7 @@ export interface MenuItem {
   category?: string; // Sticking to optional mapped name for legacy compatibility
   price: number;
   cost: number;
-  status: "Available" | "Sold Out" | "Out Of Stock" | "Seasonal" | "Coming Soon" | "Discontinued";
+  status: "Available" | "Sold Out" | "Out Of Stock" | "Seasonal" | "Coming Soon" | "Discontinued" | "Draft";
   popularity: number; // 1-5 star rating or index
   image?: string;
   description?: string;
@@ -40,11 +40,23 @@ export interface MenuItem {
 export interface InventoryItem {
   id: string;
   name: string;
+  category?: string;
   currentQty: number;
   unit: string;
   reorderLevel: number;
   supplierId: string;
   unitPrice: number;
+  supplierName?: string;
+  lastUpdated?: string;
+  whatsapp_status?: string;
+  whatsapp_sent_at?: string;
+  whatsapp_sid?: string;
+  whatsapp_error?: string;
+  voice_status?: string;
+  voice_called_at?: string;
+  voice_sid?: string;
+  voice_error?: string;
+  last_notification_type?: string;
 }
 
 export interface OrderItem {
@@ -64,7 +76,10 @@ export interface Order {
   subtotal: number;
   tax: number;
   total: number;
-  status: "Completed" | "Pending" | "Cancelled" | "Preparing" | "Ready" | "Served";
+  status: "Completed" | "Pending" | "Accepted" | "Cancelled" | "Preparing" | "Ready" | "Served";
+  payment_method?: string;
+  payment_status?: string;
+  special_instructions?: string;
   timestamp: string; // ISO date string
 }
 

@@ -5,64 +5,32 @@ const { Pool } = pg;
 let pool: pg.Pool | null = null;
 let isInitialized = false;
 
-// Default initial menu items for Spice Heaven
-const defaultMenuItems = [
-  { id: "m1", name: "Masala Dosa", category: "Main Course", price: 120, cost: 40, status: "Available", popularity: 5 },
-  { id: "m2", name: "Paneer Butter Masala", category: "Main Course", price: 220, cost: 80, status: "Available", popularity: 4 },
-  { id: "m3", name: "Garlic Naan", category: "Main Course", price: 40, cost: 12, status: "Available", popularity: 4 },
-  { id: "m4", name: "Filter Coffee", category: "Beverage", price: 30, cost: 8, status: "Available", popularity: 5 },
-  { id: "m5", name: "Mango Lassi", category: "Beverage", price: 80, cost: 25, status: "Available", popularity: 4 },
-  { id: "m6", name: "Samosa (2 Pcs)", category: "Appetizer", price: 50, cost: 15, status: "Available", popularity: 4 },
-  { id: "m7", name: "Gulab Jamun (2 Pcs)", category: "Dessert", price: 60, cost: 18, status: "Available", popularity: 5 }
-];
-
-// Default initial customers for Spice Heaven
-const defaultCustomers = [
-  { name: "Rahul", phone: "+91 98765 43210", visitCount: 12, totalSpent: 2450, notes: "Regular. Likes Filter Coffee strong and sweet." },
-  { name: "Priya", phone: "+91 91234 56789", visitCount: 8, totalSpent: 1920, notes: "Prefers mild options, fan of paneer." },
-  { name: "Amit", phone: "+91 99887 76655", visitCount: 3, totalSpent: 450, notes: "Prefers table near the window." },
-  { name: "Sneha", phone: "+91 97777 88888", visitCount: 20, totalSpent: 5200, notes: "VVIP customer. Prefers organic ingredients." }
-];
-
 export function getPool(): pg.Pool | null {
   if (pool) return pool;
 
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    console.warn("⚠️ DATABASE_URL environment variable is not defined. The app will run in offline demo fallback mode.");
+    console.warn("DATABASE_URL environment variable is missing. Database features will be unavailable.");
     return null;
   }
 
-  // Validate that connectionString is a valid postgres connection string format
-  if (!connectionString.startsWith("postgresql://") && !connectionString.startsWith("postgres://")) {
-    console.warn(`⚠️ DATABASE_URL is not a valid PostgreSQL connection string format (received: "${connectionString}"). The app will run in offline demo fallback mode.`);
-    return null;
-  }
+  pool = new Pool({
+    connectionString,
+    ssl: connectionString.includes("supabase") || connectionString.includes("localhost") ? { rejectUnauthorized: false } : undefined,
+    max: 20,
+    idleTimeoutMillis: 30000
+  });
 
-  try {
-    pool = new Pool({
-      connectionString,
-      ssl: connectionString.includes("supabase") || connectionString.includes("localhost") ? { rejectUnauthorized: false } : undefined,
-      max: 10,
-      idleTimeoutMillis: 30000
-    });
+  pool.on("error", (err) => {
+    console.error("PostgreSQL Pool error:", err);
+  });
 
-    pool.on("error", (err) => {
-      console.error("PostgreSQL Pool error:", err);
-    });
-
-    return pool;
-  } catch (err) {
-    console.error("Failed to initialize PostgreSQL connection pool:", err);
-    return null;
-  }
+  return pool;
 }
 
 export async function query(text: string, params?: any[]) {
   const p = getPool();
-  if (!p) {
-    throw new Error("DATABASE_URL environment variable is required to run database queries.");
-  }
+  if (!p) throw new Error("Database offline");
   return p.query(text, params);
 }
 
@@ -73,196 +41,304 @@ export async function bootstrapDatabase() {
 
   try {
     const connectionString = process.env.DATABASE_URL;
-    if (connectionString && connectionString.includes('supabase')) {
-      console.log('Connected to live Supabase database. Skipping local bootstrap.');
-      isInitialized = true;
-      return;
-    }
-
-    console.log("Checking and bootstrapping database tables in PostgreSQL...");
-
-    // 1. Create Customers Table
+    // For local development and to fulfill Prompt 1 cleanly, we ALWAYS drop and recreate.
+    // If you want to keep data in prod, remove the DROP statements later.
+    console.log("Dropping existing tables for clean ERP schema bootstrap...");
     await p.query(`
-      CREATE TABLE IF NOT EXISTS customers (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        phone VARCHAR(50) UNIQUE,
-        visit_count INT DEFAULT 0,
-        total_spent DECIMAL(12, 2) DEFAULT 0.0,
-        last_order_date TIMESTAMP,
-        notes TEXT
-      );
+      DROP TABLE IF EXISTS order_items CASCADE;
+      DROP TABLE IF EXISTS orders CASCADE;
+      DROP TABLE IF EXISTS inventory_transactions CASCADE;
+      DROP TABLE IF EXISTS inventory CASCADE;
+      DROP TABLE IF EXISTS recipes CASCADE;
+      DROP TABLE IF EXISTS ingredients CASCADE;
+      DROP TABLE IF EXISTS menu_items CASCADE;
+      DROP TABLE IF EXISTS menu_categories CASCADE;
+      DROP TABLE IF EXISTS customers CASCADE;
+      DROP TABLE IF EXISTS restaurant_tables CASCADE;
+      DROP TABLE IF EXISTS restaurants CASCADE;
+      DROP TABLE IF EXISTS payments CASCADE;
+      DROP TABLE IF EXISTS sales CASCADE;
+      DROP TABLE IF EXISTS finance_ledger CASCADE;
+      DROP TABLE IF EXISTS report_history CASCADE;
+      DROP TABLE IF EXISTS notifications CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+      DROP TABLE IF EXISTS kitchen_queue CASCADE;
+      DROP TABLE IF EXISTS audit_logs CASCADE;
+      DROP TABLE IF EXISTS order_events CASCADE;
+      DROP TABLE IF EXISTS kitchen_events CASCADE;
+
+      DROP TABLE IF EXISTS suppliers CASCADE;
+      DROP TABLE IF EXISTS finances CASCADE;
     `);
 
-    // 2. Create Menu Items Table
+    console.log("Creating new ERP tables...");
+
     await p.query(`
-      CREATE TABLE IF NOT EXISTS menu_items (
-        id VARCHAR(50) PRIMARY KEY,
+      CREATE TABLE restaurants (
+        id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        category VARCHAR(100) NOT NULL,
+        phone VARCHAR(50),
+        address TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE restaurant_tables (
+        id SERIAL PRIMARY KEY,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
+        table_number INT NOT NULL,
+        capacity INT DEFAULT 4,
+        status VARCHAR(50) DEFAULT 'Available'
+      );
+
+      CREATE TABLE customers (
+        id SERIAL PRIMARY KEY,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
+        full_name VARCHAR(255) NOT NULL,
+        phone VARCHAR(50) UNIQUE,
+        total_orders INT DEFAULT 0,
+        total_spent DECIMAL(12, 2) DEFAULT 0.0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE menu_categories (
+        id SERIAL PRIMARY KEY,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL,
+        display_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE
+      );
+
+      CREATE TABLE menu_items (
+        id SERIAL PRIMARY KEY,
+        category_id INT REFERENCES menu_categories(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
         price DECIMAL(10, 2) NOT NULL,
         cost DECIMAL(10, 2) NOT NULL,
         status VARCHAR(50) DEFAULT 'Available',
-        popularity INT DEFAULT 3
+        popularity INT DEFAULT 3,
+        image_url TEXT,
+        is_veg BOOLEAN DEFAULT TRUE
       );
-    `);
 
-    // 3. Create Suppliers Table
-    await p.query(`
-      CREATE TABLE IF NOT EXISTS suppliers (
-        id VARCHAR(50) PRIMARY KEY,
+      CREATE TABLE ingredients (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        category VARCHAR(100),
+        unit VARCHAR(50) NOT NULL
+      );
+
+      CREATE TABLE recipes (
+        id SERIAL PRIMARY KEY,
+        menu_item_id INT REFERENCES menu_items(id) ON DELETE CASCADE,
+        ingredient_id INT REFERENCES ingredients(id) ON DELETE CASCADE,
+        quantity_required DECIMAL(10, 4) NOT NULL
+      );
+
+      CREATE TABLE suppliers (
+        id SERIAL PRIMARY KEY,
         company_name VARCHAR(255) NOT NULL,
         contact_person VARCHAR(255) NOT NULL,
         phone VARCHAR(50) NOT NULL,
-        items_supplied JSON DEFAULT '[]'::json,
         pending_payments DECIMAL(12, 2) DEFAULT 0.0
       );
-    `);
 
-    // 4. Create Inventory Table
-    await p.query(`
-      CREATE TABLE IF NOT EXISTS inventory (
-        id VARCHAR(50) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        current_qty DECIMAL(12, 2) NOT NULL,
-        unit VARCHAR(50) NOT NULL,
-        reorder_level DECIMAL(12, 2) NOT NULL,
-        supplier_id VARCHAR(50) REFERENCES suppliers(id) ON DELETE SET NULL,
-        unit_price DECIMAL(12, 2) NOT NULL
-      );
-    `);
-
-    // 5. Create Orders Table
-    await p.query(`
-      CREATE TABLE IF NOT EXISTS orders (
+      CREATE TABLE inventory (
         id SERIAL PRIMARY KEY,
+        ingredient_id INT REFERENCES ingredients(id) ON DELETE CASCADE UNIQUE,
+        current_qty DECIMAL(12, 4) NOT NULL DEFAULT 0,
+        reorder_level DECIMAL(12, 4) NOT NULL DEFAULT 0,
+        unit_price DECIMAL(12, 2) NOT NULL DEFAULT 0,
+        supplier_id INT REFERENCES suppliers(id) ON DELETE SET NULL,
+        whatsapp_status VARCHAR(50) DEFAULT 'Never Sent',
+        whatsapp_sent_at TIMESTAMP,
+        whatsapp_sid VARCHAR(255),
+        whatsapp_error TEXT,
+        voice_status VARCHAR(50) DEFAULT 'Never Called',
+        voice_called_at TIMESTAMP,
+        voice_sid VARCHAR(255),
+        voice_error TEXT,
+        last_notification_type VARCHAR(50)
+      );
+
+      CREATE TABLE inventory_transactions (
+        id SERIAL PRIMARY KEY,
+        inventory_id INT REFERENCES inventory(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL, -- 'IN' or 'OUT'
+        amount DECIMAL(12, 4) NOT NULL,
+        reason VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE orders (
+        id SERIAL PRIMARY KEY,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
         customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
-        customer_name VARCHAR(255) NOT NULL,
-        phone VARCHAR(50),
-        table_or_type VARCHAR(100) NOT NULL,
+        table_id INT REFERENCES restaurant_tables(id) ON DELETE SET NULL,
+        order_number BIGINT NOT NULL,
         subtotal DECIMAL(10, 2) NOT NULL,
-        tax DECIMAL(10, 2) NOT NULL,
+        gst DECIMAL(10, 2) NOT NULL,
         total DECIMAL(10, 2) NOT NULL,
         status VARCHAR(50) DEFAULT 'Pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         payment_method VARCHAR(50) DEFAULT 'Not Specified',
         payment_status VARCHAR(50) DEFAULT 'NOT PAID',
         special_instructions TEXT,
-        estimated_prep_time INT DEFAULT 15
+        estimated_prep_time INT DEFAULT 15,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `);
 
-    // Ensure columns exist on older databases
-    await p.query(`
-      ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'Not Specified';
-      ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'NOT PAID';
-      ALTER TABLE orders ADD COLUMN IF NOT EXISTS special_instructions TEXT;
-      ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimated_prep_time INT DEFAULT 15;
-    `);
-
-    // 6. Create Order Items Table
-    await p.query(`
-      CREATE TABLE IF NOT EXISTS order_items (
+      CREATE TABLE order_items (
         id SERIAL PRIMARY KEY,
         order_id INT REFERENCES orders(id) ON DELETE CASCADE,
-        menu_item_id VARCHAR(50) REFERENCES menu_items(id) ON DELETE SET NULL,
-        name VARCHAR(255) NOT NULL,
+        menu_item_id INT REFERENCES menu_items(id) ON DELETE SET NULL,
         quantity INT NOT NULL,
-        price DECIMAL(10, 2) NOT NULL
+        price DECIMAL(10, 2) NOT NULL,
+        total DECIMAL(10, 2) NOT NULL
       );
-    `);
 
-    // 7. Create Finances Table
-    await p.query(`
-      CREATE TABLE IF NOT EXISTS finances (
+      CREATE TABLE payments (
         id SERIAL PRIMARY KEY,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        type VARCHAR(50) NOT NULL,
+        order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+        payment_mode VARCHAR(50) NOT NULL,
+        payment_status VARCHAR(50) NOT NULL,
+        transaction_id VARCHAR(255),
+        amount DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE sales (
+        id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+        invoice_number VARCHAR(100) UNIQUE NOT NULL,
+        total_amount DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE finance_ledger (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(50) NOT NULL, -- 'Income' or 'Expense'
         category VARCHAR(100) NOT NULL,
         amount DECIMAL(12, 2) NOT NULL,
-        description TEXT NOT NULL
+        description TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE notifications (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(50) NOT NULL,
+        message TEXT NOT NULL,
+        read_status BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE,
+        role VARCHAR(50) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        phone VARCHAR(50) UNIQUE NOT NULL,
+        pin_code VARCHAR(255) NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE otp_verifications (
+        id SERIAL PRIMARY KEY,
+        phone VARCHAR(50) NOT NULL,
+        otp VARCHAR(10) NOT NULL,
+        is_verified BOOLEAN DEFAULT FALSE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE kitchen_queue (
+        id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+        status VARCHAR(50) DEFAULT 'Pending',
+        prep_time INT,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP
+      );
+
+      CREATE TABLE report_history (
+        id SERIAL PRIMARY KEY,
+        report_type VARCHAR(50) DEFAULT 'Daily Business Report',
+        owner_id VARCHAR(50) DEFAULT 'owner_1',
+        generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        twilio_sid VARCHAR(255),
+        delivery_status VARCHAR(50)
+      );
+
+      
+      CREATE TABLE IF NOT EXISTS kitchen_events (
+        id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+        status VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS order_events (
+        id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+        previous_status VARCHAR(50),
+        new_status VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id SERIAL PRIMARY KEY,
+        action VARCHAR(255) NOT NULL,
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS otp_verifications (
+        id SERIAL PRIMARY KEY,
+        phone VARCHAR(50) NOT NULL,
+        otp VARCHAR(10) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        is_verified BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // --- Seeding Section ---
+    console.log("Seeding essential ERP baseline data...");
 
-    // Seed Menu Items if empty
-    const menuCount = await p.query("SELECT COUNT(*) FROM menu_items");
-    if (parseInt(menuCount.rows[0].count, 10) === 0) {
-      console.log("Seeding initial menu items into PostgreSQL...");
-      for (const item of defaultMenuItems) {
-        await p.query(`
-          INSERT INTO menu_items (id, name, category, price, cost, status, popularity)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, [item.id, item.name, item.category, item.price, item.cost, item.status, item.popularity]);
-      }
+    // 1. Restaurant
+    const restRes = await p.query(`
+      INSERT INTO restaurants (name, phone, address) 
+      VALUES ('Spice Heaven', '+91 9876543210', '123 Food Street') 
+      RETURNING id
+    `);
+    const restId = restRes.rows[0].id;
+
+    // 2. Tables (1-10)
+    for (let i = 1; i <= 10; i++) {
+      await p.query(`INSERT INTO restaurant_tables (restaurant_id, table_number) VALUES ($1, $2)`, [restId, i]);
     }
 
-    // Seed Customers if empty
-    const customerCount = await p.query("SELECT COUNT(*) FROM customers");
-    if (parseInt(customerCount.rows[0].count, 10) === 0) {
-      console.log("Seeding initial CRM customers into PostgreSQL...");
-      for (const c of defaultCustomers) {
-        await p.query(`
-          INSERT INTO customers (name, phone, visit_count, total_spent, last_order_date, notes)
-          VALUES ($1, $2, $3, $4, NOW(), $5)
-        `, [c.name, c.phone, c.visitCount, c.totalSpent, c.notes]);
-      }
-    }
+    // 3. Category & Menu Item & Recipe
+    const catRes = await p.query(`
+      INSERT INTO menu_categories (restaurant_id, name) VALUES ($1, 'Main Course') RETURNING id
+    `, [restId]);
+    const catId = catRes.rows[0].id;
 
-    // Seed Suppliers if empty
-    const supplierCount = await p.query("SELECT COUNT(*) FROM suppliers");
-    if (parseInt(supplierCount.rows[0].count, 10) === 0) {
-      console.log("Seeding initial suppliers into PostgreSQL...");
-      const defaultSuppliers = [
-        { id: "s1", companyName: "Dairy Craft", contactPerson: "Rajesh Kumar", phone: "+91 98888 77777", itemsSupplied: ["Paneer", "Milk", "Cheese"], pendingPayments: 2800.00 },
-        { id: "s2", companyName: "Fresh Farms", contactPerson: "Anil Sharma", phone: "+91 97777 66666", itemsSupplied: ["Tomatoes", "Onions", "Potatoes", "Flour/Maida"], pendingPayments: 1500.00 },
-        { id: "s3", companyName: "Kapi Co.", contactPerson: "Srinivas Rao", phone: "+91 96666 55555", itemsSupplied: ["Coffee Beans", "Tea Powder"], pendingPayments: 0.00 }
-      ];
-      for (const s of defaultSuppliers) {
-        await p.query(`
-          INSERT INTO suppliers (id, company_name, contact_person, phone, items_supplied, pending_payments)
-          VALUES ($1, $2, $3, $4, $5::json, $6)
-        `, [s.id, s.companyName, s.contactPerson, s.phone, JSON.stringify(s.itemsSupplied), s.pendingPayments]);
-      }
-    }
+    const menuRes = await p.query(`
+      INSERT INTO menu_items (category_id, name, price, cost, status, popularity) 
+      VALUES ($1, 'Masala Dosa', 120, 40, 'Available', 5) RETURNING id
+    `, [catId]);
+    const menuId = menuRes.rows[0].id;
 
-    // Seed Inventory if empty
-    const inventoryCount = await p.query("SELECT COUNT(*) FROM inventory");
-    if (parseInt(inventoryCount.rows[0].count, 10) === 0) {
-      console.log("Seeding initial inventory items into PostgreSQL...");
-      const defaultInventory = [
-        { id: "i1", name: "Tomatoes", currentQty: 12.5, unit: "kg", reorderLevel: 5.0, supplierId: "s2", unitPrice: 40 },
-        { id: "i2", name: "Onions", currentQty: 18.0, unit: "kg", reorderLevel: 6.0, supplierId: "s2", unitPrice: 30 },
-        { id: "i3", name: "Paneer", currentQty: 4.2, unit: "kg", reorderLevel: 2.0, supplierId: "s1", unitPrice: 350 },
-        { id: "i4", name: "Milk", currentQty: 15.0, unit: "L", reorderLevel: 5.0, supplierId: "s1", unitPrice: 60 },
-        { id: "i5", name: "Flour/Maida", currentQty: 25.0, unit: "kg", reorderLevel: 10.0, supplierId: "s2", unitPrice: 45 },
-        { id: "i6", name: "Coffee Beans", currentQty: 3.5, unit: "kg", reorderLevel: 1.5, supplierId: "s3", unitPrice: 800 }
-      ];
-      for (const i of defaultInventory) {
-        await p.query(`
-          INSERT INTO inventory (id, name, current_qty, unit, reorder_level, supplier_id, unit_price)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, [i.id, i.name, i.currentQty, i.unit, i.reorderLevel, i.supplierId, i.unitPrice]);
-      }
-    }
+    const ingRes1 = await p.query(`INSERT INTO ingredients (name, category, unit) VALUES ('Dosa Batter', 'Other', 'kg') RETURNING id`);
+    const ingRes2 = await p.query(`INSERT INTO ingredients (name, category, unit) VALUES ('Potato Masala', 'Vegetables', 'kg') RETURNING id`);
+    
+    await p.query(`INSERT INTO recipes (menu_item_id, ingredient_id, quantity_required) VALUES ($1, $2, 0.2)`, [menuId, ingRes1.rows[0].id]);
+    await p.query(`INSERT INTO recipes (menu_item_id, ingredient_id, quantity_required) VALUES ($1, $2, 0.1)`, [menuId, ingRes2.rows[0].id]);
 
-    // Seed Finances if empty (add some rent/salaries history)
-    const financesCount = await p.query("SELECT COUNT(*) FROM finances");
-    if (parseInt(financesCount.rows[0].count, 10) === 0) {
-      console.log("Seeding initial financial history into PostgreSQL...");
-      const defaultFinances = [
-        { type: "Expense", category: "Rent", amount: 12000.00, description: "Monthly restaurant space rent" },
-        { type: "Expense", category: "Salaries", amount: 8500.00, description: "Part-time kitchen staff salaries" },
-        { type: "Expense", category: "Utilities", amount: 2350.00, description: "Electricity and water bills" }
-      ];
-      for (const f of defaultFinances) {
-        await p.query(`
-          INSERT INTO finances (type, category, amount, description, created_at)
-          VALUES ($1, $2, $3, $4, NOW() - INTERVAL '3 days')
-        `, [f.type, f.category, f.amount, f.description]);
-      }
-    }
+    const suppRes = await p.query(`INSERT INTO suppliers (company_name, contact_person, phone) VALUES ('Fresh Foods', 'Rahul', '1234567890') RETURNING id`);
+    
+    await p.query(`INSERT INTO inventory (ingredient_id, current_qty, reorder_level, unit_price, supplier_id) VALUES ($1, 10, 2, 50, $2)`, [ingRes1.rows[0].id, suppRes.rows[0].id]);
+    await p.query(`INSERT INTO inventory (ingredient_id, current_qty, reorder_level, unit_price, supplier_id) VALUES ($1, 5, 1, 60, $2)`, [ingRes2.rows[0].id, suppRes.rows[0].id]);
 
     console.log("Database table bootstrapping and seeding complete!");
     isInitialized = true;

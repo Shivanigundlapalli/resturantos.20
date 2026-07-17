@@ -4,4 +4,33 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Luxury Brand Backgrounds */
+  --color-zinc-950: #081B15; /* Sidebar */
+  --color-zinc-900: #011D14; /* Primary Background */
+  --color-zinc-800: #10271E; /* Card Background */
+  --color-zinc-700: #173126; /* Input Fields */
+  --color-zinc-600: #2A3B33; /* Borders / dark hover */
+  --color-zinc-500: #7D8B86; /* Placeholder / muted text */
+  --color-zinc-400: #C8C8C3; /* Secondary Text */
+  --color-zinc-300: #C8C8C3; /* Secondary Text */
+  --color-zinc-200: #2A3B33; /* Light Borders */
+  --color-zinc-100: #F5F5F2; /* Primary Text */
+  --color-zinc-50:  #F5F5F2; /* Primary Text */
+
+  /* Primary Button / Accent Gold */
+  --color-amber-500: #BB9240; /* Accent Gold */
+  --color-amber-600: #D6A84D; /* Hover Gold */
+  --color-amber-400: #D6A84D; /* Hover Gold */
+  
+  /* Status Colors */
+  --color-emerald-500: #10B981; /* Success / Available */
+  --color-blue-500: #3B82F6; /* Preparing */
+  --color-rose-500: #EF4444; /* Error / Cancelled */
+  --color-red-500: #EF4444; /* Error / Cancelled */
+  --color-orange-500: #F97316; /* Low Stock */
+  --color-purple-500: #8B5CF6; /* Ready */
+  --color-green-500: #22C55E; /* Served */
+  --color-green-600: #16A34A; /* Paid */
+  --color-red-600: #DC2626; /* Unpaid / Out of stock */
 }

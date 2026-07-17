@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import CustomerLanding from "./CustomerLanding";
 import CustomerOTP from "./CustomerOTP";
-import CustomerMenu from "./CustomerMenu";
+import CustomerDashboard from "./CustomerDashboard";
 import CustomerCheckout from "./CustomerCheckout";
 import CustomerOrderTracking from "./CustomerOrderTracking";
 import { MenuItem } from "../types";
 
-export type CustomerFlowState = "landing" | "otp" | "menu" | "checkout" | "tracking";
+export type CustomerFlowState = "landing" | "otp" | "dashboard" | "checkout" | "tracking";
 
 export interface CartItem extends MenuItem {
   cartItemId: string;
@@ -15,7 +15,7 @@ export interface CartItem extends MenuItem {
 }
 
 export default function CustomerApp() {
-  const [flowState, setFlowState] = useState<CustomerFlowState>("menu");
+  const [flowState, setFlowState] = useState<CustomerFlowState>("dashboard");
   
   // URL Params state
   const [restaurantId, setRestaurantId] = useState<string>("");
@@ -48,7 +48,7 @@ export default function CustomerApp() {
   };
 
   const handleOTPVerify = () => {
-    setFlowState("menu");
+    setFlowState("dashboard");
   };
 
   const handleProceedToCheckout = () => {
@@ -62,12 +62,12 @@ export default function CustomerApp() {
     setFlowState("tracking");
   };
 
-  const handleBackToMenu = () => {
-    setFlowState("menu");
+  const handleBackToDashboard = () => {
+    setFlowState("dashboard");
   };
 
   return (
-    <div className="w-screen h-screen bg-zinc-50 overflow-hidden font-sans">
+    <div className="w-screen h-screen bg-[#041A13] overflow-hidden font-sans">
       {flowState === "landing" && (
         <CustomerLanding 
           tableNumber={tableNumber} 
@@ -81,12 +81,13 @@ export default function CustomerApp() {
           onVerify={handleOTPVerify} 
         />
       )}
-      {flowState === "menu" && (
-        <CustomerMenu 
+      {flowState === "dashboard" && (
+        <CustomerDashboard 
           cart={cart}
           setCart={setCart}
           onCheckout={handleProceedToCheckout}
           customerName={customerName}
+          mobileNumber={mobileNumber}
           tableNumber={tableNumber}
         />
       )}
@@ -99,7 +100,7 @@ export default function CustomerApp() {
           setCustomerName={setCustomerName}
           setMobileNumber={setMobileNumber}
           onConfirm={handleOrderConfirmed}
-          onBack={handleBackToMenu}
+          onBack={handleBackToDashboard}
         />
       )}
       {flowState === "tracking" && activeOrderId && (

@@ -8,20 +8,39 @@ export class OrdersRepository {
 
     const res = await query(`
       SELECT id, name, description, image_url, display_order, is_active, background_color, icon 
-      FROM categories 
+      FROM menu_categories 
       ORDER BY display_order ASC, name ASC
     `);
     
+    
     return res.rows.map(row => ({
-      id: row.id,
+      id: String(row.id),
       name: row.name,
-      description: row.description,
-      image_url: row.image_url,
-      display_order: row.display_order,
-      is_active: row.is_active,
-      background_color: row.background_color,
-      icon: row.icon
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -32,44 +51,45 @@ export class OrdersRepository {
     if (!p) return [];
 
     const res = await query(`
+      
       SELECT m.id, m.name, m.category_id, CAST(m.price AS DOUBLE PRECISION) as price, 
-             m.availability_status, m.description, m.image_url, c.name as category_name,
-             m.short_description, m.sub_category, CAST(m.discounted_price AS DOUBLE PRECISION) as discounted_price, 
-             CAST(m.gst_percentage AS DOUBLE PRECISION) as gst_percentage, m.calories, 
-             m.spice_level, m.dietary_preference, m.tags, m.timing_slot, m.stock_type, 
-             m.current_stock, m.addons, m.removable_ingredients, m.images
+             CAST(m.cost AS DOUBLE PRECISION) as cost, m.status, m.image_url, c.name as category_name,
+             m.is_veg, m.popularity
       FROM menu_items m
-      LEFT JOIN categories c ON m.category_id = c.id
-      ORDER BY c.display_order ASC, m.name ASC
+
+      LEFT JOIN menu_categories c ON m.category_id = c.id
+      ORDER BY c.id ASC, m.name ASC
     `);
     
+    
     return res.rows.map(row => ({
-      id: row.id,
+      id: String(row.id),
       name: row.name,
-      category_id: row.category_id,
+      category_id: String(row.category_id),
       category: row.category_name || "Main Course",
       price: row.price,
-      cost: row.price * 0.4,
-      status: row.availability_status as any || "Available",
-      popularity: 5,
-      description: row.description,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
       image: row.image_url,
-      short_description: row.short_description,
-      sub_category: row.sub_category,
-      discounted_price: row.discounted_price,
-      gst_percentage: row.gst_percentage,
-      calories: row.calories,
-      spice_level: row.spice_level,
-      dietary_preference: row.dietary_preference,
-      isVeg: row.dietary_preference === "Veg" || row.dietary_preference === "Vegan" || row.dietary_preference === "Jain",
-      tags: row.tags || [],
-      timing_slot: row.timing_slot,
-      stock_type: row.stock_type,
-      current_stock: row.current_stock,
-      addons: row.addons || [],
-      removable_ingredients: row.removable_ingredients || [],
-      images: row.images || []
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -80,22 +100,42 @@ export class OrdersRepository {
     if (!p) return [];
 
     const res = await query(`
-      SELECT id, full_name, phone, total_orders as "visitCount", 
-             CAST(total_spent AS DOUBLE PRECISION) as "totalSpent", 
-             updated_at as "lastOrderDate"
+      SELECT id, full_name, phone, total_orders as visitCount, 
+             CAST(total_spent AS DOUBLE PRECISION) as totalSpent, 
+             updated_at as lastOrderDate
       FROM customers 
       ORDER BY total_orders DESC, full_name
     `);
 
+    
     return res.rows.map(row => ({
       id: String(row.id),
-      name: row.full_name,
-      phone: row.phone || "+91 99999 99999",
-      visitCount: row.visitCount || 0,
-      totalSpent: row.totalSpent || 0,
-      lastOrderDate: row.lastOrderDate ? new Date(row.lastOrderDate).toISOString() : new Date().toISOString(),
-      notes: ""
+      name: row.name,
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -154,6 +194,8 @@ export class OrdersRepository {
              CAST(o.gst AS DOUBLE PRECISION) as tax, 
              CAST(o.total AS DOUBLE PRECISION) as total, 
              o.status, o.created_at as timestamp,
+             o.payment_method, o.payment_status, o.special_instructions,
+             o.payment_method, o.payment_status, o.special_instructions, o.payment_method, o.payment_status, o.special_instructions,
              COUNT(*) OVER() as "fullCount"
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
@@ -203,6 +245,9 @@ export class OrdersRepository {
         tax: row.tax,
         total: row.total,
         status: row.status as any,
+        payment_method: row.payment_method,
+        payment_status: row.payment_status,
+        special_instructions: row.special_instructions,
         timestamp: new Date(row.timestamp).toISOString()
       };
     });
@@ -254,6 +299,9 @@ export class OrdersRepository {
       tax: row.tax,
       total: row.total,
       status: row.status as any,
+      payment_method: row.payment_method,
+      payment_status: row.payment_status,
+      special_instructions: row.special_instructions,
       timestamp: new Date(row.timestamp).toISOString()
     };
   }
@@ -278,25 +326,27 @@ export class OrdersRepository {
     const p = getPool();
     if (!p) throw new Error("Database offline");
 
-    // Start transaction to secure multi-table inserts
-    await query("BEGIN");
+    const client = await p.connect();
 
     try {
+      // Start transaction to secure multi-table inserts
+      await client.query("BEGIN");
+
       // Get the single restaurant ID for multi-tenant context
-      const restRes = await query("SELECT id FROM restaurants LIMIT 1");
+      const restRes = await client.query("SELECT id FROM restaurants LIMIT 1");
       const restaurantId = restRes.rows.length > 0 ? restRes.rows[0].id : null;
 
       // Map table number
       let tableId = null;
       if (orderData.tableOrType.startsWith("Table ")) {
         const tNum = parseInt(orderData.tableOrType.split(" ")[1], 10);
-        const tRes = await query("SELECT id FROM restaurant_tables WHERE table_number = $1 LIMIT 1", [tNum]);
+        const tRes = await client.query("SELECT id FROM restaurant_tables WHERE table_number = $1 LIMIT 1", [tNum]);
         if (tRes.rows.length > 0) tableId = tRes.rows[0].id;
       }
 
       // Check or Upsert Customer CRM records
       let customerId: string | null = null;
-      let customerRes = await query(`
+      let customerRes = await client.query(`
         SELECT id, total_orders, total_spent FROM customers 
         WHERE LOWER(full_name) = LOWER($1) OR (phone IS NOT NULL AND phone = $2)
         LIMIT 1
@@ -308,13 +358,13 @@ export class OrdersRepository {
         const nextTotalOrders = (cust.total_orders || 0) + 1;
         const nextTotalSpent = parseFloat(cust.total_spent || 0) + orderData.total;
 
-        await query(`
+        await client.query(`
           UPDATE customers 
-          SET total_orders = $1, total_spent = $2, updated_at = NOW()
+          SET total_orders = $1, total_spent = $2
           WHERE id = $3
         `, [nextTotalOrders, nextTotalSpent, customerId]);
       } else {
-        const insertCust = await query(`
+        const insertCust = await client.query(`
           INSERT INTO customers (restaurant_id, full_name, phone, total_orders, total_spent, created_at, updated_at)
           VALUES ($1, $2, $3, 1, $4, NOW(), NOW())
           RETURNING id
@@ -326,7 +376,7 @@ export class OrdersRepository {
       const orderNumber = Math.floor(Math.random() * 100000);
 
       // Insert Order Header record
-      const orderRes = await query(`
+      const orderRes = await client.query(`
         INSERT INTO orders (restaurant_id, customer_id, table_id, order_number, subtotal, gst, total, status, created_at, payment_method, payment_status, special_instructions, estimated_prep_time)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11, $12)
         RETURNING id, created_at
@@ -350,13 +400,13 @@ export class OrdersRepository {
 
       // Insert Order Items records in batch
       for (const item of orderData.items) {
-        await query(`
+        await client.query(`
           INSERT INTO order_items (order_id, menu_item_id, quantity, price, total)
           VALUES ($1, $2, $3, $4, $5)
         `, [newOrderId, item.menuItemId, item.quantity, item.price, item.quantity * item.price]);
       }
 
-      await query("COMMIT");
+      await client.query("COMMIT");
 
       return {
         id: String(newOrderId),
@@ -371,30 +421,122 @@ export class OrdersRepository {
         timestamp: new Date(createdAt).toISOString()
       };
     } catch (err) {
-      await query("ROLLBACK");
+      await client.query("ROLLBACK");
       console.error("Database transaction rolled back:", err);
       throw err;
+    } finally {
+      client.release();
     }
   }
 
   /**
    * Updates order status in PostgreSQL
    */
-  async updateOrderStatus(id: number, status: "Pending" | "Preparing" | "Ready" | "Served" | "Completed" | "Cancelled"): Promise<Order | null> {
-    const res = await query(`
-      UPDATE orders 
-      SET status = $1 
-      WHERE id = $2 
-      RETURNING id
-    `, [status, id]);
+  async updateOrderStatus(id: number | string, status: "Pending" | "Accepted" | "Preparing" | "Ready" | "Served" | "Completed" | "Cancelled"): Promise<Order | null> {
+    const p = getPool();
+    if (!p) return null;
 
-    if (res.rows.length === 0) return null;
-    return this.getOrderById(id);
+    const client = await p.connect();
+    
+    try {
+      await client.query("BEGIN");
+
+      // 1. Get previous status
+      const prevRes = await client.query("SELECT status FROM orders WHERE id = $1", [id]);
+      if (prevRes.rows.length === 0) throw new Error("Order not found");
+      const previousStatus = prevRes.rows[0].status;
+
+      // 2. Update status
+      const res = await client.query(`
+        UPDATE orders 
+        SET status = $1
+        WHERE id = $2 
+        RETURNING id, restaurant_id
+      `, [status, id]);
+
+      if (res.rows.length === 0) throw new Error("Failed to update order");
+      
+      const orderId = res.rows[0].id;
+
+      // 3. Log into order_events
+      await client.query(`
+        INSERT INTO order_events (order_id, previous_status, new_status)
+        VALUES ($1, $2, $3)
+      `, [orderId, previousStatus, status]);
+
+      // 4. Log into kitchen_events
+      await client.query(`
+        INSERT INTO kitchen_events (order_id, status)
+        VALUES ($1, $2)
+      `, [orderId, status]);
+
+      // 5. Log into audit_logs
+      await client.query(`
+        INSERT INTO audit_logs (action, details)
+        VALUES ($1, $2)
+      `, ["ORDER_STATUS_UPDATE", `Order ${orderId} moved from ${previousStatus} to ${status}`]);
+
+      // 6. INVENTORY AUTOMATION ON "Accepted"
+      if (status === "Accepted") {
+        const itemsRes = await client.query(`SELECT menu_item_id, quantity FROM order_items WHERE order_id = $1`, [orderId]);
+        
+        for (const item of itemsRes.rows) {
+          const recipeRes = await client.query(`SELECT inventory_id, quantity_required FROM recipes WHERE menu_item_id = $1`, [item.menu_item_id]);
+          
+          for (const recipe of recipeRes.rows) {
+            const deduction = recipe.quantity_required * item.quantity;
+            
+            // Deduct from inventory
+            const invRes = await client.query(`
+              UPDATE inventory 
+              SET current_stock = current_stock - $1 
+              WHERE id = $2
+              RETURNING id, name, current_stock, minimum_stock_level
+            `, [deduction, recipe.inventory_id]);
+
+            if (invRes.rows.length > 0) {
+              const inv = invRes.rows[0];
+              
+              // Low stock alert
+              if (inv.current_stock <= inv.minimum_stock_level && inv.current_stock > 0) {
+                await client.query(`
+                  INSERT INTO notifications (type, message, read_status)
+                  VALUES ($1, $2, FALSE)
+                `, ["LOW_STOCK", `Inventory item ${inv.name} is running low (${inv.current_stock} remaining).`]);
+              }
+
+              // Out of Stock Logic
+              if (inv.current_stock <= 0) {
+                await client.query(`
+                  INSERT INTO notifications (type, message, read_status)
+                  VALUES ($1, $2, FALSE)
+                `, ["OUT_OF_STOCK", `Inventory item ${inv.name} is OUT OF STOCK. Related menu items disabled.`]);
+
+                // Find all menu items that depend on this inventory item and mark them as Out of Stock
+                await client.query(`
+                  UPDATE menu_items
+                  SET status = 'Out of Stock'
+                  WHERE id IN (
+                    SELECT menu_item_id FROM recipes WHERE inventory_id = $1
+                  )
+                `, [inv.id]);
+              }
+            }
+          }
+        }
+      }
+
+      await client.query("COMMIT");
+      return this.getOrderById(id);
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error("updateOrderStatus failed:", err);
+      return null;
+    } finally {
+      client.release();
+    }
   }
 
-  /**
-   * Deletes order from PostgreSQL
-   */
   async deleteOrder(id: number): Promise<boolean> {
     // Cascading delete is enabled, so deleting order automatically removes order items.
     const res = await query(`
@@ -446,22 +588,42 @@ export class OrdersRepository {
     if (!p) return [];
 
     const res = await query(`
-      SELECT id, name, CAST(current_qty AS DOUBLE PRECISION) as "currentQty", 
-             unit, CAST(reorder_level AS DOUBLE PRECISION) as "reorderLevel", 
-             supplier_id as "supplierId", CAST(unit_price AS DOUBLE PRECISION) as "unitPrice"
+      SELECT id, ingredient_name as name, CAST(current_stock AS DOUBLE PRECISION) as "currentQty", 
+             unit, CAST(minimum_stock AS DOUBLE PRECISION) as "reorderLevel", 
+             supplier_id as "supplierId", CAST(cost_per_unit AS DOUBLE PRECISION) as "unitPrice"
       FROM inventory
-      ORDER BY name
+      ORDER BY ingredient_name
     `);
 
+    
     return res.rows.map(row => ({
-      id: row.id,
+      id: String(row.id),
       name: row.name,
-      currentQty: row.currentQty,
-      unit: row.unit,
-      reorderLevel: row.reorderLevel,
-      supplierId: row.supplierId || "",
-      unitPrice: row.unitPrice
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -479,14 +641,35 @@ export class OrdersRepository {
       ORDER BY company_name
     `);
 
+    
     return res.rows.map(row => ({
-      id: row.id,
-      companyName: row.companyName,
-      contactPerson: row.contactPerson,
-      phone: row.phone,
-      itemsSupplied: Array.isArray(row.itemsSupplied) ? row.itemsSupplied : (typeof row.itemsSupplied === "string" ? JSON.parse(row.itemsSupplied) : []),
-      pendingPayments: row.pendingPayments
+      id: String(row.id),
+      name: row.name,
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -503,14 +686,35 @@ export class OrdersRepository {
       ORDER BY created_at DESC
     `);
 
+    
     return res.rows.map(row => ({
-      id: "f" + row.id,
-      timestamp: new Date(row.timestamp).toISOString(),
-      type: row.type as any,
-      category: row.category as any,
-      amount: row.amount,
-      description: row.description
+      id: String(row.id),
+      name: row.name,
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
+
   }
 
   /**
@@ -569,7 +773,7 @@ export class OrdersRepository {
       INSERT INTO categories (restaurant_id, name, description, image_url, display_order, is_active, background_color, icon)
       VALUES ((SELECT id FROM restaurants LIMIT 1), $1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    `, [cat.name, cat.description, cat.image_url, cat.display_order || 0, cat.is_active ?? true, cat.background_color || 'bg-white', cat.icon || 'Utensils']);
+    `, [cat.name, cat.description, cat.image_url, cat.display_order || 0, cat.is_active ?? true, cat.background_color || 'bg-zinc-900', cat.icon || 'Utensils']);
     return res.rows[0];
   }
 
@@ -583,7 +787,7 @@ export class OrdersRepository {
           is_active = COALESCE($5, is_active),
           background_color = COALESCE($6, background_color),
           icon = COALESCE($7, icon),
-          updated_at = NOW()
+          
       WHERE id = $8
       RETURNING *
     `, [cat.name, cat.description, cat.image_url, cat.display_order, cat.is_active, cat.background_color, cat.icon, id]);
@@ -591,7 +795,7 @@ export class OrdersRepository {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
-    const res = await query(`DELETE FROM categories WHERE id = $1 RETURNING id`, [id]);
+    const res = await query(`DELETE FROM menu_categories WHERE id = $1 RETURNING id`, [id]);
     return res.rows.length > 0;
   }
 
@@ -637,7 +841,7 @@ export class OrdersRepository {
         addons = COALESCE($18::jsonb, addons),
         removable_ingredients = COALESCE($19::jsonb, removable_ingredients),
         availability_status = COALESCE($20, availability_status),
-        updated_at = NOW()
+        
       WHERE id = $21
       RETURNING id
     `, [

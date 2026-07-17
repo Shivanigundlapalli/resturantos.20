@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:backend": "python backend/run_supervisor.py",
+    "dev:backend": "tsx server.ts",
     "build": "vite build",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
@@ -22,11 +22,13 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "openai": "^6.48.0",
     "pg": "^8.22.0",
     "razorpay": "^2.9.6",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-hook-form": "^7.81.0",
+    "twilio": "^6.0.2",
     "vite": "^6.2.3",
     "zod": "^4.4.3"
   },
