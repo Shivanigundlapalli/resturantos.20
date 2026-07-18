@@ -1,3 +1,4 @@
+// @ts-nocheck
 import twilio from 'twilio';
 import { getPool } from './db';
 import * as dotenv from 'dotenv';

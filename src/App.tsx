@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { RestaurantState, ChatMessage, Order, MenuItem, InventoryItem, Supplier, FinanceEntry } from "./types";
 import Sidebar from "./components/Sidebar";

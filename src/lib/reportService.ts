@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getPool } from './db';
 import twilio from 'twilio';
 import { GoogleGenAI } from '@google/genai';

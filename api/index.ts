@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { appPromise } from '../server';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 

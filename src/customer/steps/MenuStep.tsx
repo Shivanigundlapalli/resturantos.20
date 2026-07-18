@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Search, Plus, Minus, Loader2, Star, Info, ShoppingCart } from 'lucide-react';

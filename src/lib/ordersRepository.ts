@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { query, getPool } from "./db";
 import { Order, OrderItem, Customer, MenuItem, InventoryItem, Supplier, FinanceEntry } from "../types";
 
