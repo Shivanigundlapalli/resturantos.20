@@ -242,13 +242,27 @@ export const broadcastState = () => {
 };
 
 async function startServer() {
-  // Bootstrap the PostgreSQL database
-  await bootstrapDatabase();
-  await scanInventoryOnStartup();
+  // Bootstrap the PostgreSQL database (Non-blocking on Vercel to prevent cold-start timeouts)
+  if (process.env.DATABASE_URL) {
+    if (process.env.VERCEL) {
+      bootstrapDatabase().catch(e => console.error("Vercel DB Bootstrap Error:", e));
+    } else {
+      await bootstrapDatabase();
+      await scanInventoryOnStartup();
+    }
+  }
 
   const app = express();
   app.use(express.json());
   
+  // Environment variable check middleware
+  app.use('/api', (req, res, next) => {
+    if (!process.env.DATABASE_URL) {
+      return res.status(500).json({ success: false, error: "DATABASE_URL environment variable is missing in production" });
+    }
+    next();
+  });
+
   // Static route for uploaded images
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -464,44 +478,45 @@ async function startServer() {
 
   // API Route: Get state
   app.get("/api/state", requireAuth, async (req, res) => {
-    const db = getPool();
-    if (db) {
-       try {
-         const result = await db.query(`
-          SELECT i.id as inventory_id, ing.name, ing.category, CAST(i.current_qty AS DOUBLE PRECISION) as "currentQty", 
-                 ing.unit, CAST(i.reorder_level AS DOUBLE PRECISION) as "reorderLevel", 
-                 i.supplier_id as "supplierId", CAST(i.unit_price AS DOUBLE PRECISION) as "unitPrice",
-                 s.company_name,
-                 i.whatsapp_status, i.whatsapp_sent_at, i.whatsapp_sid, i.whatsapp_error,
-                 i.voice_status, i.voice_called_at, i.voice_sid, i.voice_error, i.last_notification_type,
-                 (SELECT MAX(created_at) FROM inventory_transactions WHERE inventory_id = i.id) as last_updated
-          FROM inventory i
-          JOIN ingredients ing ON i.ingredient_id = ing.id
-          LEFT JOIN suppliers s ON i.supplier_id = s.id
-          ORDER BY ing.name ASC
-         `);
-         dbState.inventory = result.rows.map(row => ({
-            id: String(row.inventory_id),
-            name: row.name,
-            category: row.category || "Other",
-            currentQty: row.currentQty,
-            unit: row.unit,
-            reorderLevel: row.reorderLevel,
-            supplierId: row.supplierId ? String(row.supplierId) : "",
-            unitPrice: row.unitPrice,
-            supplierName: row.company_name,
-            lastUpdated: row.last_updated,
-            whatsapp_status: row.whatsapp_status,
-            whatsapp_sent_at: row.whatsapp_sent_at,
-            whatsapp_sid: row.whatsapp_sid,
-            whatsapp_error: row.whatsapp_error,
-            voice_status: row.voice_status,
-            voice_called_at: row.voice_called_at,
-            voice_sid: row.voice_sid,
-            voice_error: row.voice_error,
-            last_notification_type: row.last_notification_type,
-            ...getNotificationState(String(row.inventory_id))
-         }));
+    try {
+      const db = getPool();
+      if (db) {
+         try {
+           const result = await db.query(`
+            SELECT i.id as inventory_id, ing.name, ing.category, CAST(i.current_qty AS DOUBLE PRECISION) as "currentQty", 
+                   ing.unit, CAST(i.reorder_level AS DOUBLE PRECISION) as "reorderLevel", 
+                   i.supplier_id as "supplierId", CAST(i.unit_price AS DOUBLE PRECISION) as "unitPrice",
+                   s.company_name,
+                   i.whatsapp_status, i.whatsapp_sent_at, i.whatsapp_sid, i.whatsapp_error,
+                   i.voice_status, i.voice_called_at, i.voice_sid, i.voice_error, i.last_notification_type,
+                   (SELECT MAX(created_at) FROM inventory_transactions WHERE inventory_id = i.id) as last_updated
+            FROM inventory i
+            JOIN ingredients ing ON i.ingredient_id = ing.id
+            LEFT JOIN suppliers s ON i.supplier_id = s.id
+            ORDER BY ing.name ASC
+           `);
+           dbState.inventory = result.rows.map(row => ({
+              id: String(row.inventory_id || ""),
+              name: row.name || "",
+              category: row.category || "Other",
+              currentQty: row.currentQty || 0,
+              unit: row.unit || "unit",
+              reorderLevel: row.reorderLevel || 0,
+              supplierId: row.supplierId ? String(row.supplierId) : "",
+              unitPrice: row.unitPrice || 0,
+              supplierName: row.company_name || "",
+              lastUpdated: row.last_updated,
+              whatsapp_status: row.whatsapp_status,
+              whatsapp_sent_at: row.whatsapp_sent_at,
+              whatsapp_sid: row.whatsapp_sid,
+              whatsapp_error: row.whatsapp_error,
+              voice_status: row.voice_status,
+              voice_called_at: row.voice_called_at,
+              voice_sid: row.voice_sid,
+              voice_error: row.voice_error,
+              last_notification_type: row.last_notification_type,
+              ...getNotificationState(String(row.inventory_id))
+           }));
          } catch (e) {
            console.error("Error fetching inventory for state sync:", e);
          }
@@ -509,10 +524,10 @@ async function startServer() {
            const suppResult = await db.query(`SELECT id, company_name as "companyName", contact_person as "contactPerson", phone FROM suppliers`);
            if (suppResult.rows.length > 0) {
              dbState.suppliers = suppResult.rows.map(row => ({
-               id: String(row.id),
-               companyName: row.companyName,
-               contactPerson: row.contactPerson,
-               phone: row.phone,
+               id: String(row.id || ""),
+               companyName: row.companyName || "",
+               contactPerson: row.contactPerson || "",
+               phone: row.phone || "",
                itemsSupplied: [],
                pendingPayments: 0
              }));
@@ -520,9 +535,13 @@ async function startServer() {
          } catch (e) {
            console.error("Error fetching suppliers for state sync:", e);
          }
+      }
+      await syncDbStateFromPostgres();
+      return res.json(dbState);
+    } catch (err: any) {
+      console.error("[GET /api/state] Error:", err);
+      return res.status(500).json({ success: false, error: err.message });
     }
-    await syncDbStateFromPostgres();
-    res.json(dbState);
   });
 
   // API Route: Server-Sent Events (SSE) Stream
@@ -570,32 +589,37 @@ async function startServer() {
 
   // API Route: Manually update/patch state (for UI quick action support)
   app.post("/api/state/update", requireAuth, async (req, res) => {
-    const { menu, inventory, orders, customers, suppliers, finances } = req.body;
-    if (menu) dbState.menu = menu;
-    if (inventory) {
-      console.log(`[Inventory Repository] Received inventory update`);
-      console.log(`[Database Update] Updating in-memory state...`);
-      dbState.inventory = inventory;
-      
-      console.log(`[Stock Evaluation] Starting evaluation for all items...`);
-      for (const item of inventory) {
-        try {
-          await evaluateThresholds(item);
-        } catch (err) {
-          console.error(`[Stock Evaluation] Error evaluating item ${item.name}:`, err);
+    try {
+      const { menu, inventory, orders, customers, suppliers, finances } = req.body;
+      if (menu) dbState.menu = menu;
+      if (inventory) {
+        console.log(`[Inventory Repository] Received inventory update`);
+        console.log(`[Database Update] Updating in-memory state...`);
+        dbState.inventory = inventory;
+        
+        console.log(`[Stock Evaluation] Starting evaluation for all items...`);
+        for (const item of inventory) {
+          try {
+            await evaluateThresholds(item);
+          } catch (err) {
+            console.error(`[Stock Evaluation] Error evaluating item ${item.name}:`, err);
+          }
         }
+        
+        // Realtime Broadcast
+        broadcastState();
       }
+      if (orders) dbState.orders = orders;
+      if (customers) dbState.customers = customers;
+      if (suppliers) dbState.suppliers = suppliers;
+      if (finances) dbState.finances = finances;
       
-      // Realtime Broadcast
-      broadcastState();
+      console.log(`[Response] Returning 200 OK for /api/state/update`);
+      return res.json(dbState);
+    } catch (err: any) {
+      console.error("[POST /api/state/update] Error:", err);
+      return res.status(500).json({ success: false, error: err.message });
     }
-    if (orders) dbState.orders = orders;
-    if (customers) dbState.customers = customers;
-    if (suppliers) dbState.suppliers = suppliers;
-    if (finances) dbState.finances = finances;
-    
-    console.log(`[Response] Returning 200 OK for /api/state/update`);
-    res.json(dbState);
   });
 
   // --- Orders Module REST API (FastAPI-aligned Node/Express implementation) ---
@@ -791,6 +815,29 @@ app.get("/menu", handleGetMenu);
 
   // --- Inventory API ---
   app.get("/api/inventory", requireOwner, async (req, res) => {
+    const normalize = (row: any) => ({
+      id: String(row.inventory_id || ""),
+      name: row.name || "",
+      category: row.category || "Other",
+      currentQty: row.currentQty || 0,
+      unit: row.unit || "unit",
+      reorderLevel: row.reorderLevel || 0,
+      supplierId: String(row.supplierId || ""),
+      unitPrice: row.unitPrice || 0,
+      supplierName: row.company_name || "",
+      lastUpdated: row.last_updated,
+      whatsapp_status: row.whatsapp_status,
+      whatsapp_sent_at: row.whatsapp_sent_at,
+      whatsapp_sid: row.whatsapp_sid,
+      whatsapp_error: row.whatsapp_error,
+      voice_status: row.voice_status,
+      voice_called_at: row.voice_called_at,
+      voice_sid: row.voice_sid,
+      voice_error: row.voice_error,
+      last_notification_type: row.last_notification_type,
+      ...getNotificationState(String(row.inventory_id))
+    });
+
     if (!getPool()) return res.json(dbState.inventory);
     try {
       const db = getPool()!;
@@ -808,32 +855,11 @@ app.get("/menu", handleGetMenu);
         ORDER BY ing.name ASC
       `;
       const result = await db.query(queryStr);
-      const inventoryItems = result.rows.map(row => ({
-        id: String(row.inventory_id),
-        name: row.name,
-        category: row.category || "Other",
-        currentQty: row.currentQty,
-        unit: row.unit,
-        reorderLevel: row.reorderLevel,
-        supplierId: String(row.supplierId),
-        unitPrice: row.unitPrice,
-        supplierName: row.company_name,
-        lastUpdated: row.last_updated,
-        whatsapp_status: row.whatsapp_status,
-        whatsapp_sent_at: row.whatsapp_sent_at,
-        whatsapp_sid: row.whatsapp_sid,
-        whatsapp_error: row.whatsapp_error,
-        voice_status: row.voice_status,
-        voice_called_at: row.voice_called_at,
-        voice_sid: row.voice_sid,
-        voice_error: row.voice_error,
-        last_notification_type: row.last_notification_type,
-        ...getNotificationState(String(row.inventory_id))
-      }));
-      res.json(inventoryItems || []);
+      const inventoryItems = result.rows.map(normalize);
+      return res.json(inventoryItems || []);
     } catch (err: any) {
-      console.error("[GET /api/inventory] Database fetch failed:", err.stack);
-      res.json([]);
+      console.error("[GET /api/inventory] Database fetch failed:", err);
+      return res.status(500).json({ success: false, error: err.message });
     }
   });
 
