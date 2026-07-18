@@ -1,7 +1,7 @@
-import { app as backendApp } from '../server';
-
 export default async function handler(req: any, res: any) {
   try {
+    // Dynamic import to catch load errors
+    const { app: backendApp } = await import('../server.js');
     // Wrap Express execution in a Promise so Vercel waits for the response
     await new Promise((resolve, reject) => {
       res.on('finish', resolve);
