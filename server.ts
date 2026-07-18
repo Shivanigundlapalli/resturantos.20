@@ -1918,6 +1918,22 @@ app.post("/api/upload", requireOwner, upload.single("image"), (req, res) => {
     });
   }
 
+  // Global API Error Handler to prevent HTML responses
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      console.error("API Error caught by global handler:", err);
+      res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+    } else {
+      next(err);
+    }
+  });
+
+  // Catch unhandled API routes and return 404 JSON
+  app.use('/api', (req, res) => {
+    res.status(404).json({ success: false, message: "API endpoint not found" });
+  });
+
+
   if (!process.env.VERCEL) {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
