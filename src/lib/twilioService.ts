@@ -1,6 +1,6 @@
 // @ts-nocheck
 import twilio from 'twilio';
-import { getPool } from './db';
+import { getPool } from "./db.js";
 import * as dotenv from 'dotenv';
 dotenv.config();
 

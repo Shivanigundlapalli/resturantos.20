@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getPool } from './db';
+import { getPool } from "./db.js";
 import twilio from 'twilio';
 import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
