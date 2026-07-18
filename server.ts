@@ -2,7 +2,6 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -1943,12 +1942,15 @@ Just describe what you need, and I'll update the menus, orders, customers, and a
 
 
   // Vite Integration
-  if (!isProd) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+  if (!isProd && !process.env.VERCEL) {
+    import("vite").then(({ createServer }) => {
+      createServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      }).then(vite => {
+        app.use(vite.middlewares);
+      }).catch(console.error);
+    }).catch(console.error);
   } else {
     const distPath = path.join(process.cwd(), "dist");
   // Static Files
