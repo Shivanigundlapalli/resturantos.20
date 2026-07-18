@@ -19,9 +19,13 @@ import { generateAndSendBusinessReport } from "./src/lib/reportService.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
+// Ensure uploads directory exists (Gracefully handle Vercel read-only filesystem)
+try {
+  if (!fs.existsSync("uploads")) {
+    fs.mkdirSync("uploads");
+  }
+} catch (e) {
+  console.warn("Could not create uploads directory (likely Vercel read-only filesystem):", e);
 }
 
 const storage = multer.diskStorage({
