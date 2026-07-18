@@ -1,5 +1,5 @@
-import { query, getPool } from "./db.js";
-import { Order, OrderItem, Customer, MenuItem, InventoryItem, Supplier, FinanceEntry } from "../types.js";
+import { query, getPool } from "./db";
+import { Order, OrderItem, Customer, MenuItem, InventoryItem, Supplier, FinanceEntry } from "../types";
 
 export class OrdersRepository {
   async getCategories(): Promise<any[]> {

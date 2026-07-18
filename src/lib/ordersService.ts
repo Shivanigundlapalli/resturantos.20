@@ -1,5 +1,5 @@
-import { OrdersRepository } from "./ordersRepository.js";
-import { Order, OrderItem, MenuItem } from "../types.js";
+import { OrdersRepository } from "./ordersRepository";
+import { Order, OrderItem, MenuItem } from "../types";
 
 export class OrdersService {
   private repository = new OrdersRepository();

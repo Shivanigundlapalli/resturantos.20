@@ -1,4 +1,4 @@
-import { getPool } from './db.js';
+import { getPool } from './db';
 import twilio from 'twilio';
 import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
