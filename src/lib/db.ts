@@ -394,13 +394,13 @@ export async function seedMenuIfEmpty() {
     const restRes = await p.query(`SELECT id FROM restaurants LIMIT 1`);
     const restId = restRes.rows.length > 0 ? restRes.rows[0].id : 1;
 
-    // Seed categories
-    await p.query(`INSERT INTO menu_categories (restaurant_id, name, display_order) VALUES 
-      ($1, 'Main Course', 1),
-      ($1, 'Curry', 2),
-      ($1, 'Breads', 3)
-      ON CONFLICT DO NOTHING
-    `, [restId]);
+    const catNames = ['Main Course', 'Curry', 'Breads'];
+    for (let i = 0; i < catNames.length; i++) {
+      const exists = await p.query(`SELECT id FROM menu_categories WHERE name = $1`, [catNames[i]]);
+      if (exists.rows.length === 0) {
+        await p.query(`INSERT INTO menu_categories (restaurant_id, name, display_order) VALUES ($1, $2, $3)`, [restId, catNames[i], i + 1]);
+      }
+    }
 
     const mainCourseRes = await p.query(`SELECT id FROM menu_categories WHERE name = 'Main Course' LIMIT 1`);
     const curryRes = await p.query(`SELECT id FROM menu_categories WHERE name = 'Curry' LIMIT 1`);

@@ -767,8 +767,14 @@ app.get("/menu", handleGetMenu);
       try {
         if (!normalizedItem.category_id) {
            const catRes = await getPool()!.query("SELECT id FROM menu_categories LIMIT 1");
-           if (catRes.rows.length > 0) normalizedItem.category_id = catRes.rows[0].id;
-           else normalizedItem.category_id = "1"; // ultimate fallback
+           if (catRes.rows.length > 0) {
+             normalizedItem.category_id = catRes.rows[0].id;
+           } else {
+             const restRes = await getPool()!.query("SELECT id FROM restaurants LIMIT 1");
+             const restId = restRes.rows.length > 0 ? restRes.rows[0].id : 1;
+             const newCat = await getPool()!.query("INSERT INTO menu_categories (restaurant_id, name) VALUES ($1, 'Main Course') RETURNING id", [restId]);
+             normalizedItem.category_id = newCat.rows[0].id;
+           }
         }
         const item = await ordersService.createMenuItem(normalizedItem);
         const fullItem = { ...normalizedItem, id: item.id };
