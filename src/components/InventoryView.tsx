@@ -309,8 +309,8 @@ export default function InventoryView({
   });
 
   filteredData.sort((a, b) => {
-    if (sortBy === "name") return a.name.localeCompare(b.name);
-    if (sortBy === "stock") return b.currentQty - a.currentQty;
+    if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
+    if (sortBy === "stock") return (b.currentQty || 0) - (a.currentQty || 0);
     if (sortBy === "supplier") return (a.supplierName || "").localeCompare(b.supplierName || "");
     if (sortBy === "updated") return new Date(b.lastUpdated || 0).getTime() - new Date(a.lastUpdated || 0).getTime();
     return 0;

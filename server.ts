@@ -640,10 +640,21 @@ app.get("/customers", handleGetCustomers);
   // GET /api/menu & GET /menu - Load menu items directly from PostgreSQL
   
 const handleGetMenu = async (req: express.Request, res: express.Response) => {
-  if (!getPool()) return res.json({ success: true, data: dbState.menu });
+  const normalize = (m: any) => ({
+    ...m,
+    id: String(m.id || ""),
+    name: m.name || "",
+    category: m.category || m.category_name || "Other",
+    price: m.price || 0,
+    description: m.description || "",
+    image: m.image || m.image_url || "",
+    status: m.status || "Available"
+  });
+
+  if (!getPool()) return res.json({ success: true, data: dbState.menu.map(normalize) });
   try {
     const menu = await ordersService.getMenuItems();
-    return res.json({ success: true, data: menu || [] });
+    return res.json({ success: true, data: (menu || []).map(normalize) });
   } catch (err: any) {
     console.error("[GET /api/menu] Database fetch failed:", err.stack);
     return res.json({ success: false, message: err.message, data: [] });
@@ -710,16 +721,36 @@ app.get("/menu", handleGetMenu);
   // --- Menu API ---
   // POST /api/menu - Create a new menu item
   const handleCreateMenu = async (req: express.Request, res: express.Response) => {
+    const body = req.body || {};
+    const normalizedItem: any = {
+      ...body,
+      name: body.name || "Untitled Dish",
+      category_id: body.category_id, 
+      category: body.category || "Main Course",
+      price: body.price || 0,
+      description: body.description || "",
+      image: body.image || "",
+      status: body.status || "Available"
+    };
+
     if (getPool()) {
       try {
-        const item = await ordersService.createMenuItem(req.body);
-        return res.status(201).json({ success: true, data: item, message: "Menu item created successfully" });
+        if (!normalizedItem.category_id) {
+           const catRes = await getPool()!.query("SELECT id FROM menu_categories LIMIT 1");
+           if (catRes.rows.length > 0) normalizedItem.category_id = catRes.rows[0].id;
+           else normalizedItem.category_id = "1"; // ultimate fallback
+        }
+        const item = await ordersService.createMenuItem(normalizedItem);
+        const fullItem = { ...normalizedItem, id: item.id };
+        return res.status(201).json({ success: true, data: fullItem, message: "Menu item created successfully" });
       } catch (err: any) {
         console.error("Create menu item failed:", err);
         return res.status(500).json({ success: false, message: err.message });
       }
     }
-    const newItem = { id: `m_${Date.now()}`, ...req.body };
+    
+    normalizedItem.category_id = normalizedItem.category_id || "1";
+    const newItem = { id: `m_${Date.now()}`, ...normalizedItem };
     dbState.menu.push(newItem);
     return res.status(201).json({ success: true, data: newItem, message: "Menu item created successfully" });
   };
