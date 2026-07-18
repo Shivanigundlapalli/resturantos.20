@@ -18,7 +18,9 @@ export function getPool(): pg.Pool | null {
     connectionString,
     ssl: connectionString.includes("supabase") || connectionString.includes("localhost") ? { rejectUnauthorized: false } : undefined,
     max: 20,
-    idleTimeoutMillis: 30000
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000, // Fail fast on Vercel if DNS IPv6 hangs
+    statement_timeout: 3000
   });
 
   pool.on("error", (err) => {
