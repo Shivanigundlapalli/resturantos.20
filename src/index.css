@@ -18,6 +18,27 @@
   --color-zinc-100: #F5F5F2; /* Primary Text */
   --color-zinc-50:  #F5F5F2; /* Primary Text */
 
+  /* New Warm Premium Theme (Light) */
+  --color-warm-bg: #F8F6F2;
+  --color-warm-surface: #FDFBF8;
+  --color-warm-card: #FFFDF9;
+  --color-forest-main: #214A36;
+  --color-forest-hover: #2E5B43;
+  --color-forest-accent: #2F5D45;
+  --color-olive: #6F8B52;
+  --color-gold: #C89A3D;
+  --color-warm-border: #E8E2D7;
+  --color-text-main: #1F2A22;
+  --color-text-sec: #646464;
+  --color-text-muted: #8A8A8A;
+
+  /* Customer Module Brand Greens */
+  --color-customer-primary: #214B36;
+  --color-customer-hover: #1B402E;
+  --color-customer-pressed: #163526;
+  --color-customer-light: #EDF5F0;
+  --color-customer-border: #D5E4DB;
+
   /* Primary Button / Accent Gold */
   --color-amber-500: #BB9240; /* Accent Gold */
   --color-amber-600: #D6A84D; /* Hover Gold */
@@ -33,4 +54,27 @@
   --color-green-500: #22C55E; /* Served */
   --color-green-600: #16A34A; /* Paid */
   --color-red-600: #DC2626; /* Unpaid / Out of stock */
+}
+
+/* 
+ * GLOBAL READABILITY RULE
+ * Enforces white text on green backgrounds.
+ * We rely on CSS inheritance for children to avoid breaking white inputs.
+ */
+.bg-forest-main,
+.bg-forest-hover,
+.bg-forest-accent,
+.bg-customer-primary,
+.bg-customer-hover,
+.bg-customer-pressed,
+.bg-emerald-500,
+.bg-green-500,
+.bg-green-600 {
+  color: #FFFFFF !important;
+}
+
+/* Ensure icons explicitly use white color when inside green backgrounds */
+:is(.bg-forest-main, .bg-forest-hover, .bg-forest-accent, .bg-customer-primary, .bg-customer-hover, .bg-customer-pressed, .bg-emerald-500, .bg-green-500, .bg-green-600) > svg,
+:is(.bg-forest-main, .bg-forest-hover, .bg-forest-accent, .bg-customer-primary, .bg-customer-hover, .bg-customer-pressed, .bg-emerald-500, .bg-green-500, .bg-green-600) > * > svg {
+  color: #FFFFFF !important;
 }

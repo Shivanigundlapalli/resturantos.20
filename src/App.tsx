@@ -251,7 +251,7 @@ export default function App() {
   const renderMainContent = () => {
     if (isLoadingState) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-lux-card text-lux-text-muted gap-3 pl-0 lg:pl-0">
+        <div className="flex-1 flex flex-col items-center justify-center bg-warm-bg text-lux-text-muted gap-3 pl-0 lg:pl-0">
           <RefreshCw className="w-8 h-8 animate-spin text-lux-status-available" />
           <p className="text-xs font-semibold">Booting Restaurant AI Operating System...</p>
         </div>
@@ -314,11 +314,18 @@ export default function App() {
             <DashboardView 
               restaurantState={restaurantState}
               setActiveTab={setActiveTab}
+            />
+          </ErrorBoundary>
+        );
+      case "orders-board":
+        return (
+          <ErrorBoundary>
+            <OrdersKanban 
+              orders={restaurantState.orders}
               onUpdateStatus={async (id, status) => {
                 try {
-                  // Make sure to use PUT or PATCH to /api/orders/:id as required by the backend
                   const res = await fetch(`/api/orders/${id.replace('ORD-', '').replace('#', '')}`, {
-                    method: "PUT",
+                    method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status })
                   });
@@ -359,7 +366,7 @@ export default function App() {
         );
       default:
         return (
-          <div className="flex-1 flex items-center justify-center bg-lux-card">
+          <div className="flex-1 flex items-center justify-center bg-warm-bg">
             <p className="text-lux-text-muted text-xs font-medium">Module under development.</p>
           </div>
         );
@@ -391,7 +398,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden bg-lux-card antialiased">
+    <div className="w-screen h-screen flex overflow-hidden bg-warm-bg antialiased">
       {/* Left Sidebar (handles its own mobile drawer logic) */}
       <Sidebar 
         activeTab={activeTab} 

@@ -224,37 +224,37 @@ export default function AgentView({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-900 text-zinc-100 font-sans relative overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-warm-bg text-text-main font-sans relative overflow-hidden">
       {/* Top Header */}
-      <header className="h-16 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md px-4 lg:px-6 flex items-center justify-between shrink-0 z-10">
+      <header className="h-16 border-b border-warm-border bg-warm-bg/80 backdrop-blur-md px-4 lg:px-6 flex items-center justify-between shrink-0 z-10">
         <div className="flex items-center gap-2 pl-10 lg:pl-0">
           <span className="text-xl">👋</span>
           <div>
-            <h2 className="text-sm font-bold text-zinc-100 tracking-tight">Hello, Spice Heaven!</h2>
-            <p className="hidden sm:block text-[10px] text-zinc-400 font-semibold tracking-wide">Ask your Restaurant Agent anything. It will manage everything for you.</p>
+            <h2 className="text-sm font-bold text-text-main tracking-tight">Hello, Spice Heaven!</h2>
+            <p className="hidden sm:block text-[10px] text-text-sec font-semibold tracking-wide">Ask your Restaurant Agent anything. It will manage everything for you.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Live Date display — hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2 bg-zinc-900 px-3.5 py-1.5 rounded-[12px] border border-zinc-800 text-xs text-zinc-100 font-bold shadow-xs">
-            <Calendar className="w-3.5 h-3.5 text-amber-500" />
+          <div className="hidden md:flex items-center gap-2 bg-warm-bg px-3.5 py-1.5 rounded-[12px] border border-warm-border text-xs text-text-main font-bold shadow-xs">
+            <Calendar className="w-3.5 h-3.5 text-forest-accent" />
             <span>{getFormattedDate()}</span>
           </div>
 
           {/* Quick Notification alert */}
-          <div className="relative cursor-pointer bg-zinc-900 hover:bg-zinc-950 p-2 rounded-[12px] border border-zinc-800 transition-colors">
-            <Bell className="w-4 h-4 text-zinc-400" />
+          <div className="relative cursor-pointer bg-warm-bg hover:bg-warm-bg p-2 rounded-[12px] border border-warm-border transition-colors">
+            <Bell className="w-4 h-4 text-text-sec" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </div>
 
           {/* Database Reset button */}
           <button 
             onClick={onResetDatabase}
-            className="flex items-center gap-1.5 text-[10px] bg-zinc-900 hover:bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold px-2.5 py-1.5 rounded-[12px] transition-colors shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 text-[10px] bg-warm-bg hover:bg-warm-bg border border-warm-border text-text-sec font-bold px-2.5 py-1.5 rounded-[12px] transition-colors shrink-0 cursor-pointer"
             title="Reset Database to default state"
           >
-            <RefreshCw className="w-3 h-3 text-zinc-400" />
+            <RefreshCw className="w-3 h-3 text-text-sec" />
             <span className="hidden sm:inline">Reset DB</span>
           </button>
         </div>
@@ -274,15 +274,15 @@ export default function AgentView({
               className="max-w-4xl mx-auto w-full space-y-8 my-auto"
             >
               {/* Premium Hero Banner */}
-              <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-[28px] p-8 text-zinc-100 shadow-xl relative overflow-hidden border border-white/5 flex flex-col md:flex-row items-center gap-8">
+              <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-[28px] p-8 text-text-main shadow-md relative overflow-hidden border border-warm-border flex flex-col md:flex-row items-center gap-8">
                 {/* Visual Glow */}
-                <div className="absolute top-[-50%] right-[-20%] w-[400px] h-[400px] bg-transparent border border-amber-500/30 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-30%] left-[-10%] w-[300px] h-[300px] bg-transparent border border-amber-500/30 rounded-full blur-[80px]" />
+                <div className="absolute top-[-50%] right-[-20%] w-[400px] h-[400px] bg-transparent border border-forest-accent/30 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-30%] left-[-10%] w-[300px] h-[300px] bg-transparent border border-forest-accent/30 rounded-full blur-[80px]" />
 
                 {/* Left Side: Chef Robot Illustration */}
-                <div className="relative shrink-0 w-28 h-28 bg-zinc-900/5 border border-white/10 rounded-[22px] flex items-center justify-center shadow-inner group">
-                  <Bot className="w-16 h-16 text-amber-500 animate-pulse" />
-                  <div className="absolute -top-1 -right-1 bg-amber-500 text-zinc-900 p-1.5 rounded-lg shadow-black">
+                <div className="relative shrink-0 w-28 h-28 bg-warm-bg/5 border border-warm-border rounded-[22px] flex items-center justify-center shadow-inner group">
+                  <Bot className="w-16 h-16 text-forest-accent animate-pulse" />
+                  <div className="absolute -top-1 -right-1 bg-forest-accent text-zinc-900 p-1.5 rounded-lg shadow-sm">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -290,23 +290,23 @@ export default function AgentView({
                 {/* Right Side: Copy & Info */}
                 <div className="flex-1 space-y-4 text-center md:text-left">
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold tracking-tight">I'm your <span className="text-amber-500">Restaurant AI Agent</span> 🤖</h3>
-                    <p className="text-zinc-100/80 text-sm leading-relaxed max-w-xl">
+                    <h3 className="text-2xl font-bold tracking-tight">I'm your <span className="text-forest-accent">Restaurant AI Agent</span> 🤖</h3>
+                    <p className="text-text-main/80 text-sm leading-relaxed max-w-xl">
                       I can help you manage your orders, inventory, finances, customers, suppliers, compile daily audits, and process bills in real-time. Just talk to me like a human manager.
                     </p>
                   </div>
 
                   {/* Badges */}
                   <div className="flex flex-wrap justify-center md:justify-start gap-2.5 text-xs font-semibold">
-                    <span className="bg-zinc-900/5 text-amber-500 px-3 py-1 rounded-xl border border-white/10 flex items-center gap-1">
+                    <span className="bg-warm-bg/5 text-forest-accent px-3 py-1 rounded-xl border border-warm-border flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Smart Reasoning
                     </span>
-                    <span className="bg-zinc-900/5 text-amber-500 px-3 py-1 rounded-xl border border-white/10 flex items-center gap-1">
+                    <span className="bg-warm-bg/5 text-forest-accent px-3 py-1 rounded-xl border border-warm-border flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Instant Sync
                     </span>
-                    <span className="bg-zinc-900/5 text-amber-500 px-3 py-1 rounded-xl border border-white/10 flex items-center gap-1">
+                    <span className="bg-warm-bg/5 text-forest-accent px-3 py-1 rounded-xl border border-warm-border flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Accurate Analytics
                     </span>
@@ -316,23 +316,23 @@ export default function AgentView({
 
               {/* Try Asking Me Section */}
               <div className="space-y-4">
-                <div className="text-xs text-zinc-100 font-bold uppercase tracking-wider pl-1">Try asking me something like...</div>
+                <div className="text-xs text-text-main font-bold uppercase tracking-wider pl-1">Try asking me something like...</div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {suggestions.map((sug, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSuggestionClick(sug.prompt)}
-                      className="bg-zinc-900 hover:bg-amber-500 text-zinc-900/5 hover:-translate-y-0.5 hover:border-amber-500/30 border border-zinc-800 p-4 rounded-[18px] flex flex-col items-start gap-2 text-left transition-all duration-300 cursor-pointer shadow-xs group"
+                      className="bg-warm-bg hover:bg-forest-accent text-zinc-900/5 hover:-translate-y-0.5 hover:border-forest-accent/30 border border-warm-border p-4 rounded-[18px] flex flex-col items-start gap-2 text-left transition-all duration-300 cursor-pointer shadow-xs group"
                     >
-                      <div className="w-9 h-9 bg-zinc-950 group-hover:bg-transparent border border-amber-500/30 rounded-xl flex items-center justify-center text-lg transition-colors border border-zinc-800">
+                      <div className="w-9 h-9 bg-warm-bg group-hover:bg-transparent border border-forest-accent/30 rounded-xl flex items-center justify-center text-lg transition-colors border border-warm-border">
                         {sug.icon}
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-zinc-100 flex items-center gap-1 group-hover:text-amber-500">
+                        <div className="text-xs font-bold text-text-main flex items-center gap-1 group-hover:text-forest-accent">
                           <span>{sug.text}</span>
-                          <ArrowUpRight className="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-all duration-200" />
+                          <ArrowUpRight className="w-3 h-3 text-text-sec opacity-0 group-hover:opacity-100 transition-all duration-200" />
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-0.5 font-medium line-clamp-1">{sug.prompt}</p>
+                        <p className="text-[10px] text-text-sec mt-0.5 font-medium line-clamp-1">{sug.prompt}</p>
                       </div>
                     </button>
                   ))}
@@ -355,18 +355,18 @@ export default function AgentView({
                     {/* Avatar icon */}
                     <div className={`w-9 h-9 rounded-xl border shrink-0 flex items-center justify-center text-sm font-semibold shadow-xs ${
                       isAI 
-                        ? "bg-transparent border border-amber-500/30 text-amber-500 border-amber-500/20" 
-                        : "bg-zinc-950 text-zinc-100 border-transparent"
+                        ? "bg-transparent border border-forest-accent/30 text-forest-accent border-amber-500/20" 
+                        : "bg-warm-bg text-text-main border-transparent"
                     }`}>
-                      {isAI ? <Bot className="w-4 h-4 text-amber-500" /> : <User className="w-4 h-4 text-zinc-100" />}
+                      {isAI ? <Bot className="w-4 h-4 text-forest-accent" /> : <User className="w-4 h-4 text-text-main" />}
                     </div>
 
                     {/* Chat Bubble Body */}
                     <div className="space-y-2 max-w-[85%]">
                       <div className={`rounded-[18px] px-4 py-3 shadow-xs border ${
                         isAI 
-                          ? "bg-zinc-900 text-zinc-100 border-zinc-800/70" 
-                          : "bg-zinc-950 text-zinc-100 border-transparent"
+                          ? "bg-warm-bg text-text-main border-warm-border/70" 
+                          : "bg-warm-bg text-text-main border-transparent"
                       }`}>
                         {/* Sender details */}
                         <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide uppercase opacity-60 mb-1.5 select-none">
@@ -387,19 +387,19 @@ export default function AgentView({
 
                       {/* Interactive Confirmation Box for Create Orders */}
                       {isAI && msg.text && msg.text.includes("Order") && msg.text.includes("Created Successfully") && (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-[14px] p-3 shadow-xs max-w-sm flex items-center justify-between gap-3 animate-fade-in">
+                        <div className="bg-warm-bg border border-warm-border rounded-[14px] p-3 shadow-xs max-w-sm flex items-center justify-between gap-3 animate-fade-in">
                           <div className="flex items-center gap-2 text-xs">
-                            <span className="w-6 h-6 rounded-lg bg-transparent border border-amber-500/30 flex items-center justify-center text-amber-500">
+                            <span className="w-6 h-6 rounded-lg bg-transparent border border-forest-accent/30 flex items-center justify-center text-forest-accent">
                               <Check className="w-3.5 h-3.5" />
                             </span>
                             <div>
-                              <div className="font-semibold text-zinc-100">Order Completed</div>
-                              <p className="text-[10px] text-zinc-400">Thermal invoice generated</p>
+                              <div className="font-semibold text-text-main">Order Completed</div>
+                              <p className="text-[10px] text-text-sec">Thermal invoice generated</p>
                             </div>
                           </div>
                           <button
                             onClick={() => handlePrintInvoice("")}
-                            className="flex items-center gap-1 text-[11px] bg-transparent border border-amber-500/30 hover:bg-amber-500 text-zinc-900/15 text-amber-500 font-bold px-3 py-1.5 rounded-lg border border-amber-500/20/50 transition-colors"
+                            className="flex items-center gap-1 text-[11px] bg-transparent border border-forest-accent/30 hover:bg-forest-accent text-zinc-900/15 text-forest-accent font-bold px-3 py-1.5 rounded-lg border border-amber-500/20/50 transition-colors"
                           >
                             <Printer className="w-3.5 h-3.5" />
                             <span>Print Receipt</span>
@@ -418,10 +418,10 @@ export default function AgentView({
                   animate={{ opacity: 1 }}
                   className="flex items-center gap-3.5"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-transparent border border-amber-500/30 border border-amber-500/20 shrink-0 flex items-center justify-center shadow-xs">
-                    <Bot className="w-4 h-4 text-amber-500" />
+                  <div className="w-9 h-9 rounded-xl bg-transparent border border-forest-accent/30 border border-amber-500/20 shrink-0 flex items-center justify-center shadow-xs">
+                    <Bot className="w-4 h-4 text-forest-accent" />
                   </div>
-                  <div className="bg-zinc-900 border border-zinc-800/70 rounded-2xl px-4 py-3 shadow-xs">
+                  <div className="bg-warm-bg border border-warm-border/70 rounded-2xl px-4 py-3 shadow-xs">
                     <div className="flex items-center gap-1.5 select-none text-[10px] font-bold tracking-wide uppercase opacity-60 mb-1.5">
                       <span>Restaurant OS Agent</span>
                       <span>•</span>
@@ -444,16 +444,16 @@ export default function AgentView({
       </div>
 
       {/* Modern Fixed Chat Input Bar */}
-      <footer className="p-3 sm:p-6 bg-zinc-900 border-t border-zinc-800 shrink-0">
+      <footer className="p-3 sm:p-6 bg-warm-bg border-t border-warm-border shrink-0">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative flex flex-col gap-2">
           
           {/* Main Rounded Input Frame */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-[22px] px-4 py-3 shadow-xs flex items-end gap-3 hover:border-zinc-800 focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-amber-500/20/10 transition-all duration-200">
+          <div className="bg-warm-bg border border-warm-border rounded-[22px] px-4 py-3 shadow-xs flex items-end gap-3 hover:border-warm-border focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-amber-500/20/10 transition-all duration-200">
             {/* Attachment Button */}
             <button
               type="button"
               onClick={() => alert("Simulation: File uploader opened. Support standard JPG/PNG food audits, bills, invoices, receipts, and order excel dumps.")}
-              className="p-2 bg-zinc-900 hover:bg-zinc-900 rounded-xl border border-zinc-800 text-zinc-400 hover:text-zinc-300 transition-colors shrink-0 shadow-2xs"
+              className="p-2 bg-warm-bg hover:bg-warm-bg rounded-xl border border-warm-border text-text-sec hover:text-text-sec transition-colors shrink-0 shadow-2xs"
               title="Attach document or receipt image"
             >
               <Paperclip className="w-4 h-4" />
@@ -471,7 +471,7 @@ export default function AgentView({
               }}
               rows={1}
               placeholder="Ask your Restaurant Agent anything..."
-              className="flex-1 max-h-32 min-h-[36px] overflow-y-auto outline-none resize-none bg-transparent py-1.5 text-sm font-medium text-zinc-100 placeholder-zinc-500 scrollbar-none"
+              className="flex-1 max-h-32 min-h-[36px] overflow-y-auto outline-none resize-none bg-transparent py-1.5 text-sm font-medium text-text-main placeholder-zinc-500 scrollbar-none"
             />
 
              {/* Speech microphone / Send combo */}
@@ -486,10 +486,10 @@ export default function AgentView({
                   onClick={toggleListening}
                   className={`p-2 rounded-xl transition-colors relative z-10 ${
                     voiceState === "listening" || voiceState === "processing"
-                      ? "bg-transparent border border-amber-500/30 text-amber-500 hover:bg-emerald-200"
+                      ? "bg-transparent border border-forest-accent/30 text-forest-accent hover:bg-emerald-200"
                       : voiceState === "error" || voiceState === "permission-denied"
                       ? "bg-rose-100 text-rose-500 hover:bg-rose-200"
-                      : "hover:bg-zinc-950 text-zinc-400 hover:text-zinc-300"
+                      : "hover:bg-warm-bg text-text-sec hover:text-text-sec"
                   }`}
                   title={
                     voiceState === "listening" || voiceState === "processing"
@@ -507,8 +507,8 @@ export default function AgentView({
                 disabled={!inputText.trim() || isSending}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                   inputText.trim() && !isSending
-                    ? "bg-amber-500 text-zinc-900 hover:bg-amber-600 shadow-black shadow-amber-500/10 active:scale-95"
-                    : "bg-zinc-950 text-zinc-300 border border-zinc-800"
+                    ? "bg-forest-accent text-zinc-900 hover:bg-amber-600 shadow-sm shadow-amber-500/10 active:scale-95"
+                    : "bg-warm-bg text-text-sec border border-warm-border"
                 }`}
               >
                 <Send className="w-3.5 h-3.5" />
@@ -519,7 +519,7 @@ export default function AgentView({
           {/* Subtext branding or Voice state */}
           <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold select-none min-h-[16px]">
             {voiceState === "listening" ? (
-              <div className="flex items-center gap-1.5 text-amber-500 animate-pulse">
+              <div className="flex items-center gap-1.5 text-forest-accent animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 <span>Listening... Speak now</span>
               </div>
@@ -533,11 +533,11 @@ export default function AgentView({
             ) : voiceState === "error" ? (
               <span className="text-rose-500">⚠ {voiceError || "Speech recognition error."}</span>
             ) : voiceState === "stopped" ? (
-              <span className="text-amber-500">🎙 Voice input ready. You can edit before sending.</span>
+              <span className="text-forest-accent">🎙 Voice input ready. You can edit before sending.</span>
             ) : (
               <>
-                <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
-                <span className="text-zinc-400">Powered by RestaurantOS AI Agent</span>
+                <Sparkles className="w-3 h-3 text-forest-accent animate-pulse" />
+                <span className="text-text-sec">Powered by RestaurantOS AI Agent</span>
               </>
             )}
           </div>

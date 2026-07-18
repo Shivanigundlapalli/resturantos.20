@@ -66,15 +66,15 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
     <div className="p-8 h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-xl font-bold text-zinc-100">Category Organization</h2>
-          <p className="text-sm text-zinc-400">Drag to reorder or click to edit categories.</p>
+          <h2 className="text-xl font-bold text-text-main">Category Organization</h2>
+          <p className="text-sm text-text-sec">Drag to reorder or click to edit categories.</p>
         </div>
         <button 
           onClick={() => {
-            setEditingCat({ is_active: true, display_order: categories.length, background_color: "bg-zinc-900", icon: "Utensils" });
+            setEditingCat({ is_active: true, display_order: categories.length, background_color: "bg-warm-bg", icon: "Utensils" });
             setIsModalOpen(true);
           }}
-          className="bg-amber-500 text-zinc-900 hover:bg-amber-600 px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-none transition-all"
+          className="bg-forest-accent text-zinc-900 hover:bg-forest-hover px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-none transition-all"
         >
           <Plus className="w-4 h-4" /> Add Category
         </button>
@@ -84,18 +84,18 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
         {categories.map((cat) => (
           <div 
             key={cat.id} 
-            className={`bg-zinc-900 border ${cat.is_active ? 'border-zinc-800' : 'border-zinc-800 opacity-60'} p-4 rounded-2xl shadow-none flex items-center justify-between group transition-all hover:shadow-black`}
+            className={`bg-warm-bg border ${cat.is_active ? 'border-warm-border' : 'border-warm-border opacity-60'} p-4 rounded-2xl shadow-none flex items-center justify-between group transition-all hover:shadow-sm`}
           >
             <div className="flex items-center gap-4">
-              <button className="text-zinc-300 hover:text-zinc-400 cursor-grab active:cursor-grabbing">
+              <button className="text-text-sec hover:text-text-sec cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-5 h-5" />
               </button>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-none ${cat.background_color}`}>
-                 <span className="text-zinc-300 font-bold text-lg">{cat.name.charAt(0)}</span>
+                 <span className="text-text-sec font-bold text-lg">{cat.name.charAt(0)}</span>
               </div>
               <div>
-                <h3 className="font-bold text-zinc-100 text-lg">{cat.name}</h3>
-                <p className="text-sm text-zinc-400 truncate max-w-xs">{cat.description || "No description"}</p>
+                <h3 className="font-bold text-text-main text-lg">{cat.name}</h3>
+                <p className="text-sm text-text-sec truncate max-w-xs">{cat.description || "No description"}</p>
               </div>
             </div>
             
@@ -105,22 +105,22 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
                 className="flex items-center gap-2 text-sm font-medium"
               >
                 {cat.is_active ? (
-                  <><CheckCircle2 className="w-5 h-5 text-amber-500" /> <span className="text-amber-500">Active</span></>
+                  <><CheckCircle2 className="w-5 h-5 text-forest-accent" /> <span className="text-forest-accent">Active</span></>
                 ) : (
-                  <><Circle className="w-5 h-5 text-zinc-400" /> <span className="text-zinc-400">Hidden</span></>
+                  <><Circle className="w-5 h-5 text-text-sec" /> <span className="text-text-sec">Hidden</span></>
                 )}
               </button>
               
               <div className="flex gap-2">
                 <button 
                   onClick={() => { setEditingCat(cat); setIsModalOpen(true); }}
-                  className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  className="p-2 text-text-sec hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => handleDelete(cat.id)}
-                  className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="p-2 text-text-sec hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -129,59 +129,59 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
           </div>
         ))}
         {categories.length === 0 && (
-          <div className="text-center p-12 text-zinc-400 border-2 border-dashed border-zinc-800 rounded-2xl">
+          <div className="text-center p-12 text-text-sec border-2 border-dashed border-warm-border rounded-2xl">
             No categories found. Create one to get started!
           </div>
         )}
       </div>
 
       {isModalOpen && editingCat && (
-        <div className="fixed inset-0 bg-zinc-900/40 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-[500px] bg-zinc-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
-              <h2 className="text-xl font-bold text-zinc-100">{editingCat.id ? 'Edit Category' : 'New Category'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-zinc-300 p-2 rounded-full hover:bg-zinc-950">✕</button>
+        <div className="fixed inset-0 bg-warm-bg/40 backdrop-blur-sm z-50 flex justify-end">
+          <div className="w-[500px] bg-warm-bg h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
+            <div className="p-6 border-b border-warm-border flex justify-between items-center bg-warm-bg">
+              <h2 className="text-xl font-bold text-text-main">{editingCat.id ? 'Edit Category' : 'New Category'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-text-sec hover:text-text-sec p-2 rounded-full hover:bg-warm-bg">✕</button>
             </div>
             
             <form onSubmit={handleSave} className="p-6 flex-1 overflow-y-auto space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">Category Name</label>
+                <label className="block text-sm font-semibold text-text-sec mb-2">Category Name</label>
                 <input 
                   type="text" 
                   value={editingCat.name || ""} 
                   onChange={e => setEditingCat({...editingCat, name: e.target.value})}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-text-sec mb-2">Description</label>
                 <textarea 
                   value={editingCat.description || ""} 
                   onChange={e => setEditingCat({...editingCat, description: e.target.value})}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium h-24"
+                  className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium h-24"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-2">Display Order</label>
+                  <label className="block text-sm font-semibold text-text-sec mb-2">Display Order</label>
                   <input 
                     type="number" 
                     value={editingCat.display_order || 0} 
                     onChange={e => setEditingCat({...editingCat, display_order: Number(e.target.value)})}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium"
+                    className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-2">Theme Color</label>
+                  <label className="block text-sm font-semibold text-text-sec mb-2">Theme Color</label>
                   <select 
-                    value={editingCat.background_color || "bg-zinc-900"}
+                    value={editingCat.background_color || "bg-warm-bg"}
                     onChange={e => setEditingCat({...editingCat, background_color: e.target.value})}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium appearance-none"
+                    className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 transition-all font-medium appearance-none"
                   >
-                    <option value="bg-zinc-900">White</option>
+                    <option value="bg-warm-bg">White</option>
                     <option value="bg-rose-100">Rose</option>
-                    <option value="bg-transparent border border-amber-500/30">Emerald</option>
+                    <option value="bg-transparent border border-forest-accent/30">Emerald</option>
                     <option value="bg-amber-100">Amber</option>
                     <option value="bg-indigo-100">Indigo</option>
                   </select>
@@ -189,17 +189,17 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
               </div>
             </form>
             
-            <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex gap-4">
+            <div className="p-6 border-t border-warm-border bg-warm-bg flex gap-4">
               <button 
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-4 py-3 border border-zinc-800 rounded-xl text-zinc-300 font-semibold hover:bg-zinc-950 transition-colors"
+                className="flex-1 px-4 py-3 border border-warm-border rounded-xl text-text-sec font-semibold hover:bg-warm-bg transition-colors"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSave}
-                className="flex-1 px-4 py-3 bg-zinc-900 text-zinc-100 rounded-xl font-semibold hover:bg-zinc-900 transition-colors shadow-lg shadow-zinc-900/20"
+                className="flex-1 px-4 py-3 bg-warm-bg text-text-main rounded-xl font-semibold hover:bg-warm-bg transition-colors shadow-lg shadow-zinc-900/20"
               >
                 Save Category
               </button>

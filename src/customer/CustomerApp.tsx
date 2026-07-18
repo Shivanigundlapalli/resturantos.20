@@ -60,17 +60,17 @@ export default function CustomerApp() {
   const stepNumber = getStepNumber();
 
   return (
-    <div className="w-screen h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans flex flex-col">
+    <div className="w-screen h-screen bg-warm-bg text-text-main overflow-hidden font-sans flex flex-col">
       {/* Progress Header - Only show in Steps 1 to 6 */}
       {stepNumber > 0 && flowState !== "tracking" && (
-        <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-800 shrink-0 z-40">
+        <div className="bg-warm-bg px-6 py-4 border-b border-warm-border shrink-0 z-40">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Spice Heaven</span>
-            <span className="text-amber-500 text-xs font-bold bg-amber-500/10 px-2 py-1 rounded-md">Step {stepNumber} of 6</span>
+            <span className="text-text-sec text-xs font-bold uppercase tracking-widest">Spice Heaven</span>
+            <span className="text-customer-primary text-xs font-bold bg-customer-primary/10 px-2 py-1 rounded-md">Step {stepNumber} of 6</span>
           </div>
-          <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-warm-surface rounded-full overflow-hidden">
             <motion.div 
-              className="h-full bg-amber-500 rounded-full"
+              className="h-full bg-customer-primary rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(stepNumber / 6) * 100}%` }}
               transition={{ duration: 0.3 }}
@@ -79,7 +79,7 @@ export default function CustomerApp() {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden relative bg-zinc-950">
+      <div className="flex-1 overflow-hidden relative bg-warm-bg">
         <AnimatePresence mode="wait">
           {flowState === "welcome" && (
             <WelcomeStep key="welcome" onNext={() => setFlowState("details")} />
@@ -158,7 +158,7 @@ export default function CustomerApp() {
               key="tracking"
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
-              className="w-full h-full bg-zinc-950"
+              className="w-full h-full bg-warm-bg"
             >
               <CustomerOrderTracking 
                 orderId={activeOrderId}

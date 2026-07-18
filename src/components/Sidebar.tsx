@@ -34,6 +34,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
     { id: "menu", label: "Menu", icon: Menu },
     { id: "inventory", label: "Inventory", icon: Warehouse, badge: restaurantState.inventory.filter(i => i.currentQty <= i.reorderLevel).length ? "Low" : undefined },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "orders-board", label: "Live Orders", icon: KanbanSquare, badge: restaurantState.orders.filter(o => o.status === "Pending").length || undefined },
     { id: "sales", label: "Sales List", icon: ShoppingBag },
     { id: "finance", label: "Finance", icon: Coins },
     { id: "analytics", label: "Analytics", icon: LineChart },
@@ -46,24 +47,24 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
   };
 
   const SidebarContent = () => (
-    <aside id="sidebar-container" className="w-full bg-zinc-950 text-zinc-100 flex flex-col justify-between h-full border-r border-white/5 font-sans relative z-10 select-none">
+    <aside id="sidebar-container" className="w-full bg-forest-main text-warm-card flex flex-col justify-between h-full border-r border-white/10 font-sans relative z-10 select-none">
       {/* Top Brand Logo */}
       <div className="p-6 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-amber-500 text-zinc-900 rounded-[8px] flex items-center justify-center text-zinc-100 font-bold shrink-0">
+          <div className="w-8 h-8 bg-gold text-zinc-900 rounded-[8px] flex items-center justify-center text-warm-card font-bold shrink-0">
             <span className="font-bold text-base">R</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-100 flex items-center gap-1.5">
-              RestaurantOS <span className="text-amber-500 font-extrabold text-[10px] bg-zinc-900/10 px-1.5 py-0.5 rounded-md border border-white/10">AI</span>
+            <h1 className="text-lg font-semibold tracking-tight text-warm-card flex items-center gap-1.5">
+              RestaurantOS <span className="text-gold font-extrabold text-[10px] bg-forest-hover/10 px-1.5 py-0.5 rounded-md border border-white/10">AI</span>
             </h1>
-            <p className="text-[10px] text-zinc-100/50 font-medium tracking-wider uppercase mt-0.5">Manage • Serve • Grow</p>
+            <p className="text-[10px] text-warm-card/50 font-medium tracking-wider uppercase mt-0.5">Manage • Serve • Grow</p>
           </div>
         </div>
         {/* Close button on mobile */}
         <button
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-2 text-zinc-100/60 hover:text-zinc-100 hover:bg-zinc-900/10 rounded-lg transition-all"
+          className="lg:hidden p-2 text-warm-card/60 hover:text-warm-card hover:bg-forest-hover/10 rounded-lg transition-all"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />
@@ -72,7 +73,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
 
       {/* Main Navigation links */}
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
-        <div className="text-[10px] text-zinc-100/40 font-semibold tracking-wider uppercase px-3 mb-2">OPERATING SYSTEM</div>
+        <div className="text-[10px] text-warm-card/40 font-semibold tracking-wider uppercase px-3 mb-2">OPERATING SYSTEM</div>
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -82,19 +83,19 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
               onClick={() => handleTabSelect(item.id)}
               className={`w-full flex items-center justify-between px-4 py-2.5 rounded-[12px] text-sm font-medium transition-all duration-200 relative group cursor-pointer ${
                 isActive 
-                  ? "text-zinc-100 font-semibold shadow-none bg-zinc-900/10" 
-                  : "text-zinc-100/60 hover:text-zinc-100 hover:bg-zinc-900/5"
+                  ? "text-warm-card font-semibold shadow-none bg-forest-hover/10" 
+                  : "text-warm-card/60 hover:text-warm-card hover:bg-forest-hover/5"
               }`}
             >
               <div className="flex items-center gap-3 relative z-10">
-                <Icon className={`w-4 h-4 transition-colors ${isActive ? "text-zinc-100" : "text-zinc-100/40 group-hover:text-amber-500"}`} />
+                <Icon className={`w-4 h-4 transition-colors ${isActive ? "text-warm-card" : "text-warm-card/40 group-hover:text-gold"}`} />
                 <span>{item.label}</span>
               </div>
               {item.badge && (
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full relative z-10 border ${
                   item.badge === "Low" 
                     ? "bg-red-500/20 text-rose-300 border-rose-500/30 animate-pulse" 
-                    : "bg-emerald-500/20 text-amber-500 border-amber-500/30"
+                    : "bg-emerald-500/20 text-gold border-amber-500/30"
                 }`}>
                   {item.badge}
                 </span>
@@ -102,7 +103,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
               {isActive && (
                 <motion.div 
                   layoutId="active-indicator" 
-                  className="absolute inset-0 bg-zinc-900/10 rounded-[12px] -z-0" 
+                  className="absolute inset-0 bg-forest-hover/10 rounded-[12px] -z-0" 
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
@@ -112,9 +113,9 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
       </nav>
 
       {/* Bottom Profile Details */}
-      <div className="p-4 border-t border-white/5 space-y-3 bg-zinc-950/95">
+      <div className="p-4 border-t border-white/10 space-y-3 bg-forest-main/95">
         {/* Live Database Badge */}
-        <div className="bg-transparent border border-amber-500/30 border border-amber-500/20 p-2.5 rounded-[12px] flex items-center gap-2.5 text-amber-500">
+        <div className="bg-transparent border border-amber-500/30 border border-amber-500/20 p-2.5 rounded-[12px] flex items-center gap-2.5 text-gold">
           <Database className="w-4 h-4 shrink-0" />
           <div className="flex flex-col">
             <span className="text-xs font-bold leading-none tracking-tight mb-1">Real Data Only</span>
@@ -123,31 +124,31 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
         </div>
 
         {/* Restaurant Badge details */}
-        <div className="bg-zinc-900/5 p-3 rounded-[14px] border border-white/10 space-y-2 text-xs">
+        <div className="bg-forest-hover/5 p-3 rounded-[14px] border border-white/10 space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-zinc-100 truncate max-w-[140px]">Spice Heaven</span>
-            <span className="flex items-center gap-1 text-[9px] bg-emerald-500/20 text-amber-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+            <span className="font-semibold text-warm-card truncate max-w-[140px]">Spice Heaven</span>
+            <span className="flex items-center gap-1 text-[9px] bg-emerald-500/20 text-gold px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
               Active
             </span>
           </div>
-          <p className="text-[10px] text-zinc-100/50 leading-tight">23 Green Street, Hitech City, Hyderabad</p>
-          <div className="pt-1.5 border-t border-white/5 flex flex-col gap-0.5 text-[9px] text-zinc-100/40 font-mono">
+          <p className="text-[10px] text-warm-card/50 leading-tight">23 Green Street, Hitech City, Hyderabad</p>
+          <div className="pt-1.5 border-t border-white/10 flex flex-col gap-0.5 text-[9px] text-warm-card/40 font-mono">
             <div>GSTIN: 36ABCDE1234F1Z5</div>
             <div>FSSAI: 13620012000456</div>
           </div>
         </div>
 
         {/* Profile details */}
-        <div className="flex items-center justify-between gap-3 bg-zinc-900/5 p-3 rounded-[18px] border border-white/10">
+        <div className="flex items-center justify-between gap-3 bg-forest-hover/5 p-3 rounded-[18px] border border-white/10">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-emerald-700 border border-emerald-500/50 flex items-center justify-center shrink-0 font-extrabold text-zinc-100 relative uppercase">
+            <div className="w-10 h-10 rounded-full bg-emerald-700 border border-emerald-500/50 flex items-center justify-center shrink-0 font-extrabold text-warm-card relative uppercase">
               {user?.name ? user.name.split(" ").map(n => n[0]).join("") : "CS"}
               <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-zinc-800 rounded-full" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-zinc-100 truncate">{user?.name || "The Spice Garden"}</h4>
-              <p className="text-[10px] text-zinc-100/50 truncate">{user?.email || "Chef Spice (Owner)"}</p>
+              <h4 className="text-xs font-semibold text-warm-card truncate">{user?.name || "The Spice Garden"}</h4>
+              <p className="text-[10px] text-warm-card/50 truncate">{user?.email || "Chef Spice (Owner)"}</p>
             </div>
           </div>
           <button 
@@ -158,7 +159,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
                 alert("Logged out successfully.");
               }
             }}
-            className="p-2 text-zinc-100/40 hover:text-zinc-100 hover:bg-zinc-900/5 rounded-lg transition-all duration-200 cursor-pointer"
+            className="p-2 text-warm-card/40 hover:text-warm-card hover:bg-forest-hover/5 rounded-lg transition-all duration-200 cursor-pointer"
             title="Logout"
           >
             <LogOut className="w-4 h-4" />
@@ -173,7 +174,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
       {/* Mobile Hamburger Button — visible only on small screens */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 w-10 h-10 bg-zinc-950 text-zinc-100 rounded-xl flex items-center justify-center shadow-lg border border-white/10"
+        className="lg:hidden fixed top-3 left-3 z-50 w-10 h-10 bg-forest-main text-warm-card rounded-xl flex items-center justify-center shadow-lg border border-white/10"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -195,7 +196,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="lg:hidden fixed inset-0 bg-zinc-950/60 z-40 backdrop-blur-sm"
+              className="lg:hidden fixed inset-0 bg-forest-main/60 z-40 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
             {/* Drawer */}

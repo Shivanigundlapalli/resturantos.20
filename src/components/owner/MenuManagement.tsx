@@ -42,26 +42,26 @@ export default function MenuManagement() {
   const bestCategory = categories.length > 0 ? categories[0].name : "N/A"; // Simplified for now
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950 overflow-hidden">
-      <header className="bg-zinc-900 border-b border-zinc-800 px-8 py-6 shrink-0 flex flex-col gap-6">
+    <div className="h-full flex flex-col bg-warm-bg overflow-hidden">
+      <header className="bg-warm-bg border-b border-warm-border px-8 py-6 shrink-0 flex flex-col gap-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-black text-zinc-100 tracking-tight">Menu Management</h1>
-            <p className="text-sm text-zinc-400 font-medium mt-1">Manage categories, dishes, availability, and customizations.</p>
+            <h1 className="text-3xl font-black text-text-main tracking-tight">Menu Management</h1>
+            <p className="text-sm text-text-sec font-medium mt-1">Manage categories, dishes, availability, and customizations.</p>
           </div>
         </div>
 
         {/* Dashboard Summary Cards */}
         <div className="grid grid-cols-5 gap-4">
-          <StatCard icon={<Utensils />} label="Total Items" value={totalItems} color="text-zinc-300" bg="bg-zinc-950" />
-          <StatCard icon={<TrendingUp />} label="Active Items" value={activeItems} color="text-amber-500" bg="bg-transparent border border-amber-500/30" />
+          <StatCard icon={<Utensils />} label="Total Items" value={totalItems} color="text-text-sec" bg="bg-warm-bg" />
+          <StatCard icon={<TrendingUp />} label="Active Items" value={activeItems} color="text-forest-accent" bg="bg-transparent border border-forest-accent/30" />
           <StatCard icon={<AlertCircle />} label="Out of Stock" value={outOfStockItems} color="text-red-600" bg="bg-red-500/10" />
-          <StatCard icon={<EyeOff />} label="Discontinued" value={hiddenItems} color="text-zinc-400" bg="bg-zinc-950" />
+          <StatCard icon={<EyeOff />} label="Discontinued" value={hiddenItems} color="text-text-sec" bg="bg-warm-bg" />
           <StatCard icon={<Tag />} label="Best Category" value={bestCategory} color="text-indigo-600" bg="bg-indigo-50" />
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 border-b border-zinc-800">
+        <div className="flex gap-4 border-b border-warm-border">
           <TabButton 
             active={activeTab === "items"} 
             onClick={() => setActiveTab("items")} 
@@ -106,13 +106,13 @@ export default function MenuManagement() {
 
 function StatCard({ icon, label, value, color, bg }: { icon: React.ReactNode, label: string, value: string | number, color: string, bg: string }) {
   return (
-    <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 shadow-none flex items-center gap-4 hover:shadow-black transition-shadow">
+    <div className="bg-warm-bg rounded-2xl p-4 border border-warm-border shadow-none flex items-center gap-4 hover:shadow-sm transition-shadow">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bg} ${color}`}>
         {icon}
       </div>
       <div>
-        <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{label}</p>
-        <p className="text-xl font-black text-zinc-100 mt-0.5">{value}</p>
+        <p className="text-xs font-bold text-text-sec uppercase tracking-wider">{label}</p>
+        <p className="text-xl font-black text-text-main mt-0.5">{value}</p>
       </div>
     </div>
   );
@@ -123,7 +123,7 @@ function TabButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
-        active ? "border-emerald-500 text-amber-500" : "border-transparent text-zinc-400 hover:text-zinc-100"
+        active ? "border-emerald-500 text-forest-accent" : "border-transparent text-text-sec hover:text-text-main"
       }`}
     >
       {icon} {label}

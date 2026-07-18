@@ -125,7 +125,7 @@ export async function bootstrapDatabase() {
         image_url TEXT,
         display_order INT DEFAULT 0,
         is_active BOOLEAN DEFAULT TRUE,
-        background_color VARCHAR(50) DEFAULT 'bg-zinc-900',
+        background_color VARCHAR(50) DEFAULT 'bg-warm-bg',
         icon VARCHAR(50) DEFAULT 'Utensils'
       );
 

@@ -394,8 +394,13 @@ export class OrdersRepository {
         VALUES ($1, $2)
       `, [newOrderId, orderData.status]);
 
-      // Kitchen Queue insertion was the last DB step
-      // Removed broken finances INSERT
+      // Add to Finances if Paid
+      if (orderData.payment_status === "PAID" || orderData.payment_method === "ONLINE") {
+        await client.query(`
+          INSERT INTO finances (type, category, amount, description, created_at)
+          VALUES ($1, $2, $3, $4, NOW())
+        `, ["Income", "Order Revenue", orderData.total, `Order #${newOrderId}`]);
+      }
 
       await client.query("COMMIT");
 
@@ -438,20 +443,14 @@ export class OrdersRepository {
       await client.query("BEGIN");
 
       // 1. Get previous status
-      const prevRes = await client.query("SELECT status, total FROM orders WHERE id = $1", [id]);
+      const prevRes = await client.query("SELECT status FROM orders WHERE id = $1", [id]);
       if (prevRes.rows.length === 0) throw new Error("Order not found");
       const previousStatus = prevRes.rows[0].status;
-      const orderTotal = prevRes.rows[0].total;
 
-      // 2. Update status (and mark payment as PAID if Served or Completed)
+      // 2. Update status
       const res = await client.query(`
         UPDATE orders 
-        SET 
-          status = $1,
-          payment_status = CASE 
-            WHEN $1::text IN ('Served', 'Completed') THEN 'PAID' 
-            ELSE payment_status 
-          END
+        SET status = $1
         WHERE id = $2 
         RETURNING id, restaurant_id
       `, [status, id]);
@@ -529,12 +528,6 @@ export class OrdersRepository {
             }
           }
         }
-
-        // Finance Revenue Update
-        await client.query(`
-          INSERT INTO finance_ledger (type, category, amount, description, created_at)
-          VALUES ($1, $2, $3, $4, NOW())
-        `, ["Income", "Order Revenue", orderTotal, `Order #${orderId}`]);
       }
 
       await client.query("COMMIT");
@@ -694,18 +687,37 @@ export class OrdersRepository {
     const res = await query(`
       SELECT id, created_at as timestamp, type, category, 
              CAST(amount AS DOUBLE PRECISION) as amount, description
-      FROM finance_ledger
+      FROM finances
       ORDER BY created_at DESC
     `);
 
     
     return res.rows.map(row => ({
-      id: "f" + row.id,
-      timestamp: new Date(row.timestamp).toISOString(),
-      type: row.type,
-      category: row.category,
-      amount: row.amount,
-      description: row.description
+      id: String(row.id),
+      name: row.name,
+      category_id: String(row.category_id),
+      category: row.category_name || "Main Course",
+      price: row.price,
+      cost: row.cost || row.price * 0.4,
+      status: row.status || "Available",
+      popularity: row.popularity || 5,
+      description: "",
+      image: row.image_url,
+      short_description: "",
+      sub_category: "",
+      discounted_price: undefined,
+      gst_percentage: undefined,
+      calories: undefined,
+      spice_level: "",
+      dietary_preference: row.is_veg ? "Veg" : "Non-Veg",
+      isVeg: row.is_veg,
+      tags: [],
+      timing_slot: "",
+      stock_type: "",
+      current_stock: undefined,
+      addons: [],
+      removable_ingredients: [],
+      images: []
     }));
 
   }
@@ -746,7 +758,7 @@ export class OrdersRepository {
     description: string;
   }): Promise<FinanceEntry> {
     const res = await query(`
-      INSERT INTO finance_ledger (type, category, amount, description, created_at)
+      INSERT INTO finances (type, category, amount, description, created_at)
       VALUES ($1, $2, $3, $4, NOW())
       RETURNING id, created_at
     `, [entry.type, entry.category, entry.amount, entry.description]);
@@ -756,7 +768,7 @@ export class OrdersRepository {
       id: "f" + row.id,
       timestamp: new Date(row.created_at).toISOString(),
       type: entry.type,
-      category: entry.category,
+      category: entry.category as any,
       amount: entry.amount,
       description: entry.description
     };
@@ -766,7 +778,7 @@ export class OrdersRepository {
       INSERT INTO menu_categories (restaurant_id, name, description, image_url, display_order, is_active, background_color, icon)
       VALUES ((SELECT id FROM restaurants LIMIT 1), $1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    `, [cat.name, cat.description, cat.image_url, cat.display_order || 0, cat.is_active ?? true, cat.background_color || 'bg-zinc-900', cat.icon || 'Utensils']);
+    `, [cat.name, cat.description, cat.image_url, cat.display_order || 0, cat.is_active ?? true, cat.background_color || 'bg-warm-bg', cat.icon || 'Utensils']);
     return res.rows[0];
   }
 

@@ -31,20 +31,20 @@ export default class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
       return (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-zinc-900 text-center select-none font-sans h-full min-h-[400px]">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-warm-bg text-center select-none font-sans h-full min-h-[400px]">
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-rose-100 mb-4 animate-pulse">
             <AlertTriangle className="w-8 h-8 text-rose-500" />
           </div>
-          <h3 className="text-base font-bold text-zinc-100">Something went wrong in this view</h3>
-          <p className="text-xs text-zinc-400 max-w-sm mt-1 leading-relaxed">
+          <h3 className="text-base font-bold text-text-main">Something went wrong in this view</h3>
+          <p className="text-xs text-text-sec max-w-sm mt-1 leading-relaxed">
             An unexpected error occurred while rendering this component. The rest of the application remains active and safe.
           </p>
-          <pre className="mt-4 p-3.5 bg-zinc-900 rounded-xl text-[10px] text-zinc-300 font-mono max-w-lg overflow-x-auto text-left border border-zinc-800">
+          <pre className="mt-4 p-3.5 bg-warm-bg rounded-xl text-[10px] text-text-sec font-mono max-w-lg overflow-x-auto text-left border border-warm-border">
             {this.state.error?.toString() || "Unknown rendering exception"}
           </pre>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="mt-5 flex items-center gap-1.5 text-xs bg-amber-500 text-zinc-900 hover:bg-amber-600 font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shadow-none active:scale-95"
+            className="mt-5 flex items-center gap-1.5 text-xs bg-forest-accent text-zinc-900 hover:bg-forest-hover font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shadow-none active:scale-95"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reload Component</span>

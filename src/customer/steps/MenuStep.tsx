@@ -100,17 +100,17 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
       exit={{ opacity: 0 }}
       className="w-full h-full flex flex-col relative"
     >
-      <div className="sticky top-0 bg-[#041A13]/95 backdrop-blur-md z-30 pt-6 px-6 pb-4 border-b border-zinc-800">
-        <h2 className="text-2xl font-black text-zinc-100 mb-4 tracking-tight">Browse Menu</h2>
+      <div className="sticky top-0 bg-[#041A13]/95 backdrop-blur-md z-30 pt-6 px-6 pb-4 border-b border-warm-border">
+        <h2 className="text-2xl font-black text-text-main mb-4 tracking-tight">Browse Menu</h2>
         
         <div className="relative mb-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-sec" />
           <input 
             type="text" 
             placeholder="Search dishes..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-[15px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
+            className="w-full pl-12 pr-4 py-3 bg-warm-bg border border-warm-border rounded-2xl text-[15px] text-text-main placeholder:text-text-muted focus:outline-none focus:border-customer-primary transition-colors"
           />
         </div>
         
@@ -121,8 +121,8 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
               onClick={() => setActiveCategory(cat)}
               className={`snap-start shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                 activeCategory === cat 
-                ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg shadow-amber-500/20' 
-                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-amber-500/50'
+                ? 'bg-customer-primary text-white border-customer-primary shadow-lg shadow-amber-500/20' 
+                : 'bg-warm-bg text-text-sec border-warm-border hover:border-customer-primary/50'
               }`}
             >
               {cat}
@@ -133,15 +133,15 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
 
       <div className="flex-1 overflow-y-auto px-6 py-4 pb-[100px]">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
-            <Loader2 className="w-8 h-8 animate-spin text-amber-500 mb-2" />
+          <div className="flex flex-col items-center justify-center h-48 text-text-muted">
+            <Loader2 className="w-8 h-8 animate-spin text-customer-primary mb-2" />
             <p className="text-xs font-medium">Loading Menu...</p>
           </div>
         ) : displayedItems.length === 0 ? (
-          <div className="text-center py-10 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <Info className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
-            <h3 className="text-zinc-100 font-bold text-lg mb-1">No dishes found</h3>
-            <p className="text-zinc-500 text-sm">Try a different search or category</p>
+          <div className="text-center py-10 bg-warm-bg rounded-2xl border border-warm-border">
+            <Info className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" />
+            <h3 className="text-text-main font-bold text-lg mb-1">No dishes found</h3>
+            <p className="text-text-muted text-sm">Try a different search or category</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -150,32 +150,32 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
               const typeIsVeg = item.isVeg !== undefined ? item.isVeg : (!item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg'));
               
               return (
-                <div key={item.id} className="bg-zinc-900 rounded-3xl p-4 flex gap-4 border border-zinc-800 shadow-md relative overflow-hidden transition-all hover:border-amber-500/30">
+                <div key={item.id} className="bg-warm-bg rounded-3xl p-4 flex gap-4 border border-warm-border shadow-md relative overflow-hidden transition-all hover:border-customer-primary/30">
                   <div className="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-inner relative">
                     <img src={getDishImage(item.name)} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
                       <div className="flex justify-between items-start">
-                        <h3 className="text-[15px] font-black text-zinc-100 leading-tight pr-2">{item.name}</h3>
-                        <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${typeIsVeg ? 'border-green-500' : 'border-red-500'}`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${typeIsVeg ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <h3 className="text-[15px] font-black text-text-main leading-tight pr-2">{item.name}</h3>
+                        <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${typeIsVeg ? 'border-customer-primary' : 'border-red-500'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${typeIsVeg ? 'bg-customer-primary' : 'bg-red-500'}`}></div>
                         </div>
                       </div>
-                      <p className="text-xs text-zinc-400 mt-1 line-clamp-1">{item.category}</p>
+                      <p className="text-xs text-text-sec mt-1 line-clamp-1">{item.category}</p>
                       
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="flex items-center text-amber-500 text-[10px] font-black bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                        <span className="flex items-center text-customer-primary text-[10px] font-black bg-customer-primary/10 px-1.5 py-0.5 rounded-md">
                           <Star className="w-3 h-3 mr-0.5 fill-amber-500" /> 4.{item.popularity || 5}
                         </span>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center mt-3">
-                      <span className="text-lg font-black text-zinc-100">₹{item.price}</span>
+                      <span className="text-lg font-black text-text-main">₹{item.price}</span>
                       
                       {qty > 0 ? (
-                        <div className="flex items-center bg-amber-500 rounded-xl overflow-hidden shadow-lg shadow-amber-500/20">
+                        <div className="flex items-center bg-customer-primary rounded-xl overflow-hidden shadow-lg shadow-amber-500/20">
                           <button 
                             onClick={() => handleRemoveFromCart(item.id)}
                             className="w-8 h-8 flex items-center justify-center text-zinc-950 hover:bg-black/10 transition-colors"
@@ -193,7 +193,7 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
                       ) : (
                         <button 
                           onClick={() => handleAddToCart(item)}
-                          className="px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:bg-amber-500 hover:text-zinc-950 hover:border-amber-500"
+                          className="px-4 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm bg-warm-bg border border-warm-border text-text-sec hover:bg-customer-primary hover:text-white hover:border-customer-primary"
                         >
                           Add
                         </button>
@@ -214,10 +214,10 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             onClick={onNext}
-            className="w-full max-w-md bg-amber-500 text-zinc-950 px-6 py-4 rounded-2xl font-bold flex items-center justify-between shadow-[0_10px_40px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform"
+            className="w-full max-w-md bg-customer-primary text-white px-6 py-4 rounded-2xl font-bold flex items-center justify-between shadow-[0_10px_40px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-zinc-950 text-amber-500 rounded-full flex items-center justify-center text-sm">
+              <div className="w-8 h-8 bg-warm-bg text-customer-primary rounded-full flex items-center justify-center text-sm">
                 {cartItemCount}
               </div>
               <span>View Cart</span>

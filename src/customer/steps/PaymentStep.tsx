@@ -129,7 +129,7 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
         image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=128&h=128&fit=crop",
         handler: function (response: any) {
           console.log("Payment successful:", response);
-          createOrderInDb("PAID", "ONLINE");
+          createOrderInDb("Paid", "RAZORPAY");
         },
         prefill: {
           name: customerName,
@@ -140,8 +140,8 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
         },
         modal: {
           ondismiss: function() {
-            console.log("Razorpay modal dismissed, simulating success for demo");
-            createOrderInDb("Pending", "ONLINE");
+            console.log("Razorpay modal dismissed");
+            setIsProcessing(false);
           }
         }
       };
@@ -174,40 +174,40 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
       exit={{ opacity: 0, x: -20 }}
       className="w-full max-w-md mx-auto p-6 pt-10 text-center"
     >
-      <h2 className="text-2xl font-black text-zinc-100 mb-2 tracking-tight">Choose Payment</h2>
-      <p className="text-zinc-400 text-sm mb-8">Amount to pay: <span className="font-bold text-amber-500 text-lg">₹{grandTotal.toFixed(2)}</span></p>
+      <h2 className="text-2xl font-black text-text-main mb-2 tracking-tight">Choose Payment</h2>
+      <p className="text-text-sec text-sm mb-8">Amount to pay: <span className="font-bold text-customer-primary text-lg">₹{grandTotal.toFixed(2)}</span></p>
 
       {isProcessing ? (
         <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="w-12 h-12 text-amber-500 animate-spin mb-4" />
-          <p className="text-zinc-100 font-bold">Processing Order...</p>
-          <p className="text-zinc-500 text-sm">Please do not refresh</p>
+          <Loader2 className="w-12 h-12 text-customer-primary animate-spin mb-4" />
+          <p className="text-text-main font-bold">Processing Order...</p>
+          <p className="text-text-muted text-sm">Please do not refresh</p>
         </div>
       ) : (
         <div className="space-y-4">
           <button 
             onClick={handlePayOnline}
-            className="w-full bg-zinc-900 border-2 border-amber-500/50 hover:border-amber-500 text-zinc-100 p-6 rounded-2xl transition-all group relative overflow-hidden text-left flex items-center gap-4"
+            className="w-full bg-warm-bg border-2 border-customer-primary/50 hover:border-customer-primary text-text-main p-6 rounded-2xl transition-all group relative overflow-hidden text-left flex items-center gap-4"
           >
-            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-customer-primary/10 rounded-xl flex items-center justify-center text-customer-primary group-hover:scale-110 transition-transform">
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
               <div className="font-bold text-lg">Pay Online</div>
-              <div className="text-zinc-400 text-sm">UPI, Cards, Netbanking</div>
+              <div className="text-text-sec text-sm">UPI, Cards, Netbanking</div>
             </div>
           </button>
           
           <button 
             onClick={handlePayAtTable}
-            className="w-full bg-zinc-900 border-2 border-zinc-800 hover:border-zinc-700 text-zinc-100 p-6 rounded-2xl transition-all group relative overflow-hidden text-left flex items-center gap-4"
+            className="w-full bg-warm-bg border-2 border-warm-border hover:border-warm-border text-text-main p-6 rounded-2xl transition-all group relative overflow-hidden text-left flex items-center gap-4"
           >
-            <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-400 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-warm-card rounded-xl flex items-center justify-center text-text-sec group-hover:scale-110 transition-transform">
               <Banknote className="w-6 h-6" />
             </div>
             <div>
               <div className="font-bold text-lg">Pay at Table</div>
-              <div className="text-zinc-400 text-sm">Cash or Card to waiter</div>
+              <div className="text-text-sec text-sm">Cash or Card to waiter</div>
             </div>
           </button>
         </div>

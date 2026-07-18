@@ -79,20 +79,20 @@ export default function OtpStep({ customerName, mobileNumber, onNext, onBack }: 
       exit={{ opacity: 0, x: -20 }}
       className="w-full max-w-md mx-auto p-6 pt-10"
     >
-      <h2 className="text-2xl font-black text-zinc-100 mb-2 tracking-tight">Verify OTP</h2>
-      <p className="text-zinc-400 text-sm mb-6">
-        We've sent a 6-digit code to <span className="font-bold text-zinc-100">+91 {mobileNumber}</span>.
+      <h2 className="text-2xl font-black text-text-main mb-2 tracking-tight">Verify OTP</h2>
+      <p className="text-text-sec text-sm mb-6">
+        We've sent a 6-digit code to <span className="font-bold text-text-main">+91 {mobileNumber}</span>.
       </p>
       
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Enter OTP</label>
+          <label className="block text-sm font-medium text-text-sec mb-2">Enter OTP</label>
           <input 
             type="text" 
             value={otpInput}
             onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
             disabled={isSending || isVerifying}
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-4 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-center tracking-[0.5em] text-2xl font-black placeholder:text-zinc-700"
+            className="w-full bg-warm-bg border border-warm-border text-text-main px-4 py-4 rounded-xl focus:outline-none focus:border-customer-primary focus:ring-1 focus:ring-amber-500 transition-all text-center tracking-[0.5em] text-2xl font-black placeholder:text-zinc-700"
             placeholder="••••••"
           />
         </div>
@@ -100,7 +100,7 @@ export default function OtpStep({ customerName, mobileNumber, onNext, onBack }: 
         <button 
           onClick={handleVerifyOTP}
           disabled={otpInput.length !== 6 || isVerifying || isSending}
-          className="w-full bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-zinc-950 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:shadow-none hover:bg-amber-400 transition-colors flex items-center justify-center"
+          className="w-full bg-customer-primary disabled:bg-warm-card disabled:text-text-muted text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:shadow-none hover:bg-amber-400 transition-colors flex items-center justify-center"
         >
           {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify OTP"}
         </button>
@@ -109,7 +109,7 @@ export default function OtpStep({ customerName, mobileNumber, onNext, onBack }: 
           <button 
             onClick={handleSendOTP}
             disabled={isSending || isVerifying}
-            className="w-full text-zinc-400 text-sm font-medium py-2 hover:text-zinc-100 transition-colors"
+            className="w-full text-text-sec text-sm font-medium py-2 hover:text-text-main transition-colors"
           >
             {isSending ? "Sending..." : "Resend OTP"}
           </button>
@@ -117,7 +117,7 @@ export default function OtpStep({ customerName, mobileNumber, onNext, onBack }: 
           <button 
             onClick={onBack}
             disabled={isSending || isVerifying}
-            className="w-full text-zinc-500 text-xs font-medium hover:text-zinc-300 transition-colors"
+            className="w-full text-text-muted text-xs font-medium hover:text-text-sec transition-colors"
           >
             Edit Mobile Number
           </button>

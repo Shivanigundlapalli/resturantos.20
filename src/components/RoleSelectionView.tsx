@@ -8,7 +8,7 @@ interface RoleSelectionViewProps {
 
 export default function RoleSelectionView({ onSelectRole }: RoleSelectionViewProps) {
   return (
-    <div className="w-screen h-screen flex flex-col bg-zinc-950 overflow-hidden font-sans items-center justify-center relative">
+    <div className="w-screen h-screen flex flex-col bg-warm-bg overflow-hidden font-sans items-center justify-center relative">
       {/* Background Image & Overlay */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -27,7 +27,7 @@ export default function RoleSelectionView({ onSelectRole }: RoleSelectionViewPro
         className="z-10 bg-[#061811] p-10 rounded-[28px] shadow-2xl max-w-md w-full mx-4 border border-[#BB9240]/30"
       >
         <div className="flex justify-center mb-5">
-          <div className="w-14 h-14 bg-[#10271E] rounded-[14px] flex items-center justify-center shadow-inner border border-zinc-800/50">
+          <div className="w-14 h-14 bg-[#10271E] rounded-[14px] flex items-center justify-center shadow-inner border border-warm-border/50">
             <Utensils className="w-6 h-6 text-[#BB9240]" />
           </div>
         </div>

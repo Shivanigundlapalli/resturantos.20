@@ -13,15 +13,15 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
         initial={{ scale: 0.8, opacity: 0 }} 
         animate={{ scale: 1, opacity: 1 }} 
         transition={{ duration: 0.5 }}
-        className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center mb-6"
+        className="w-24 h-24 bg-customer-primary/10 rounded-full flex items-center justify-center mb-6"
       >
-        <Utensils className="w-12 h-12 text-amber-500" />
+        <Utensils className="w-12 h-12 text-customer-primary" />
       </motion.div>
       <motion.h1 
         initial={{ y: 20, opacity: 0 }} 
         animate={{ y: 0, opacity: 1 }} 
         transition={{ delay: 0.2 }}
-        className="text-4xl font-black text-zinc-100 mb-2 tracking-tight"
+        className="text-4xl font-black text-text-main mb-2 tracking-tight"
       >
         SPICE HEAVEN
       </motion.h1>
@@ -29,7 +29,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
         initial={{ y: 20, opacity: 0 }} 
         animate={{ y: 0, opacity: 1 }} 
         transition={{ delay: 0.3 }}
-        className="text-zinc-400 mb-12 font-medium"
+        className="text-text-sec mb-12 font-medium"
       >
         Experience fine dining, reimagined.
       </motion.p>
@@ -39,7 +39,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
         animate={{ y: 0, opacity: 1 }} 
         transition={{ delay: 0.4 }}
         onClick={onNext}
-        className="w-full max-w-sm bg-amber-500 text-zinc-950 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:bg-amber-400 transition-colors"
+        className="w-full max-w-sm bg-customer-primary text-white font-bold py-4 rounded-xl shadow-md hover:bg-customer-hover transition-colors"
       >
         Start Ordering
       </motion.button>

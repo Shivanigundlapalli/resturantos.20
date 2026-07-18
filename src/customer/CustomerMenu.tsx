@@ -254,7 +254,7 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                             
                             {!isAvailable && (
                               <div className="absolute inset-0 bg-[#071A12]/40 backdrop-blur-[2px] flex items-center justify-center z-10">
-                                <span className="bg-[#0B2217]/90 text-[#F5F5F2] font-bold px-4 py-2 rounded-xl text-sm shadow-xl backdrop-blur-md border border-white/10 uppercase tracking-wider">
+                                <span className="bg-[#0B2217]/90 text-[#F5F5F2] font-bold px-4 py-2 rounded-xl text-sm shadow-md backdrop-blur-md border border-warm-border uppercase tracking-wider">
                                   {item.status}
                                 </span>
                               </div>
@@ -356,7 +356,7 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                 exit={{ opacity: 0 }}
               >
                 {/* Hero Banner */}
-                <div className="relative w-full h-[220px] rounded-[28px] overflow-hidden shadow-2xl mb-8 group border border-white/5">
+                <div className="relative w-full h-[220px] rounded-[28px] overflow-hidden shadow-2xl mb-8 group border border-warm-border">
                   <img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80" alt="Authentic Indian Cuisine" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#071A12]/95 via-[#071A12]/80 to-transparent"></div>
                   <div className="absolute top-1/2 -translate-y-1/2 left-8 z-10 max-w-[60%]">

@@ -94,27 +94,27 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   };
 
   return (
-    <div className="w-screen h-screen flex bg-zinc-950 overflow-hidden font-sans">
+    <div className="w-screen h-screen flex bg-warm-bg overflow-hidden font-sans">
       {/* LEFT SIDE: 40% Login Form Area */}
-      <div className="w-full lg:w-[40%] h-full flex flex-col justify-between p-8 sm:p-12 md:p-16 bg-zinc-900 shadow-xl z-10 overflow-y-auto">
+      <div className="w-full lg:w-[40%] h-full flex flex-col justify-between p-8 sm:p-12 md:p-16 bg-warm-bg shadow-md z-10 overflow-y-auto">
         {/* Top Header Row */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-zinc-100 shadow-black shadow-amber-500/10">
+          <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-text-main shadow-sm shadow-amber-500/10">
             <Utensils className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-black text-zinc-100 text-base tracking-tight flex items-center gap-1.5">
-              RestaurantOS <span className="text-[10px] bg-transparent border border-amber-500/30 text-amber-500 font-extrabold px-1.5 py-0.5 rounded-full">AI</span>
+            <div className="font-black text-text-main text-base tracking-tight flex items-center gap-1.5">
+              RestaurantOS <span className="text-[10px] bg-transparent border border-forest-accent/30 text-forest-accent font-extrabold px-1.5 py-0.5 rounded-full">AI</span>
             </div>
-            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Manage. Serve. Grow.</p>
+            <p className="text-[10px] text-text-sec font-bold uppercase tracking-wider">Manage. Serve. Grow.</p>
           </div>
         </div>
 
         {/* Center login form */}
         <div className="my-auto py-10 max-w-sm w-full mx-auto">
           <div className="space-y-1.5 mb-8">
-            <h1 className="text-2xl font-black text-zinc-100 tracking-tight">Welcome Back 👋</h1>
-            <p className="text-xs text-zinc-400 font-medium">Sign in to manage your restaurant operations.</p>
+            <h1 className="text-2xl font-black text-text-main tracking-tight">Welcome Back 👋</h1>
+            <p className="text-xs text-text-sec font-medium">Sign in to manage your restaurant operations.</p>
           </div>
 
           {/* Feedback Messages */}
@@ -136,12 +136,12 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             <motion.div 
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-5 p-3.5 bg-transparent border border-amber-500/30 border border-amber-500/20 rounded-xl flex items-start gap-2.5 text-xs text-amber-500"
+              className="mb-5 p-3.5 bg-transparent border border-forest-accent/30 border border-forest-accent/20 rounded-xl flex items-start gap-2.5 text-xs text-forest-accent"
             >
-              <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-forest-accent shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">Login Successful</span>
-                <p className="text-[11px] text-amber-500 mt-0.5">{successMsg}</p>
+                <p className="text-[11px] text-forest-accent mt-0.5">{successMsg}</p>
               </div>
             </motion.div>
           )}
@@ -150,7 +150,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Email Address */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs text-zinc-300 font-bold uppercase tracking-wider block">
+              <label htmlFor="email" className="text-xs text-text-sec font-bold uppercase tracking-wider block">
                 Email Address
               </label>
               <div className="relative">
@@ -161,10 +161,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   {...register("email")}
                   disabled={isLoading}
                   autoComplete="email"
-                  className={`w-full bg-zinc-950 text-xs text-zinc-100 font-semibold p-3.5 rounded-xl border transition-all placeholder-zinc-500 focus:outline-none focus:bg-zinc-900 focus:ring-2 focus:ring-amber-500/20 ${
+                  className={`w-full bg-warm-bg text-xs text-text-main font-semibold p-3.5 rounded-xl border transition-all placeholder-zinc-500 focus:outline-none focus:bg-warm-bg focus:ring-2 focus:ring-amber-500/20 ${
                     errors.email 
                       ? "border-red-300 focus:border-red-500" 
-                      : "border-zinc-800 focus:border-emerald-500"
+                      : "border-warm-border focus:border-emerald-500"
                   }`}
                 />
               </div>
@@ -178,13 +178,13 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-xs text-zinc-300 font-bold uppercase tracking-wider block">
+                <label htmlFor="password" className="text-xs text-text-sec font-bold uppercase tracking-wider block">
                   Password
                 </label>
                 <button
                   type="button"
                   onClick={() => alert("Standard credentials are:\nEmail: admin@restaurantos.ai\nPassword: restaurant123")}
-                  className="text-[11px] text-amber-500 hover:text-amber-500 font-bold transition-colors cursor-pointer"
+                  className="text-[11px] text-forest-accent hover:text-forest-accent font-bold transition-colors cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -197,17 +197,17 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   {...register("password")}
                   disabled={isLoading}
                   autoComplete="current-password"
-                  className={`w-full bg-zinc-950 text-xs text-zinc-100 font-semibold p-3.5 rounded-xl border transition-all placeholder-zinc-500 focus:outline-none focus:bg-zinc-900 focus:ring-2 focus:ring-amber-500/20 pr-11 ${
+                  className={`w-full bg-warm-bg text-xs text-text-main font-semibold p-3.5 rounded-xl border transition-all placeholder-zinc-500 focus:outline-none focus:bg-warm-bg focus:ring-2 focus:ring-amber-500/20 pr-11 ${
                     errors.password 
                       ? "border-red-300 focus:border-red-500" 
-                      : "border-zinc-800 focus:border-emerald-500"
+                      : "border-warm-border focus:border-emerald-500"
                   }`}
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 cursor-pointer p-1.5 rounded-lg transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sec hover:text-text-sec cursor-pointer p-1.5 rounded-lg transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -226,9 +226,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   type="checkbox"
                   {...register("rememberMe")}
                   disabled={isLoading}
-                  className="w-4 h-4 rounded border-zinc-800 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
+                  className="w-4 h-4 rounded border-warm-border text-forest-accent focus:ring-amber-500/20 cursor-pointer"
                 />
-                <span className="text-xs text-zinc-400 font-semibold">Remember me for 30 days</span>
+                <span className="text-xs text-text-sec font-semibold">Remember me for 30 days</span>
               </label>
             </div>
 
@@ -236,7 +236,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-amber-500 text-zinc-900 hover:bg-zinc-900 disabled:bg-amber-500 text-zinc-900/50 p-3.5 rounded-xl text-xs font-bold transition-all shadow-black shadow-amber-500/10 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              className="w-full bg-forest-accent text-zinc-900 hover:bg-warm-bg disabled:bg-forest-accent text-zinc-900/50 p-3.5 rounded-xl text-xs font-bold transition-all shadow-sm shadow-amber-500/10 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
             >
               {isLoading ? (
                 <>
@@ -255,9 +255,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           {/* Divider */}
           <div className="relative my-6 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800"></div>
+              <div className="w-full border-t border-warm-border"></div>
             </div>
-            <span className="relative bg-zinc-900 px-3 text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+            <span className="relative bg-warm-bg px-3 text-[10px] text-text-sec font-bold uppercase tracking-widest">
               OR
             </span>
           </div>
@@ -269,7 +269,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             onClick={() => {
               alert("Google single-sign-on integration is configured for production. For current active restaurant owner access, please sign in with: \n\nEmail: admin@restaurantos.ai\nPassword: restaurant123");
             }}
-            className="w-full bg-zinc-900 hover:bg-zinc-950 border border-zinc-800 text-zinc-300 p-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-warm-bg hover:bg-warm-bg border border-warm-border text-text-sec p-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Chrome className="w-4 h-4 text-red-500" />
             <span>Continue with Google</span>
@@ -279,22 +279,22 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           <button
             type="button"
             onClick={() => handlePrefill("admin@restaurantos.ai", "restaurant123")}
-            className="mt-6 w-full text-left bg-transparent border border-amber-500/30/50 hover:bg-transparent border border-amber-500/30 border border-amber-500/20 p-3 rounded-xl text-[11px] text-zinc-300 leading-normal transition-all duration-200 cursor-pointer block hover:border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            className="mt-6 w-full text-left bg-transparent border border-forest-accent/30/50 hover:bg-transparent border border-forest-accent/30 border border-forest-accent/20 p-3 rounded-xl text-[11px] text-text-sec leading-normal transition-all duration-200 cursor-pointer block hover:border-forest-accent/20 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             title="Click to auto-fill credentials"
           >
-            <span className="font-extrabold text-amber-500 flex items-center gap-1.5 mb-0.5">
+            <span className="font-extrabold text-forest-accent flex items-center gap-1.5 mb-0.5">
               <span>💡</span> Click to Auto-fill Demo Credentials
             </span>
-            Email: <strong className="text-amber-500 font-extrabold">admin@restaurantos.ai</strong> | Password: <strong className="text-amber-500 font-extrabold">restaurant123</strong>
+            Email: <strong className="text-forest-accent font-extrabold">admin@restaurantos.ai</strong> | Password: <strong className="text-forest-accent font-extrabold">restaurant123</strong>
           </button>
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-800 text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-warm-border text-[10px] text-text-sec font-bold uppercase tracking-wider">
           <div className="flex items-center gap-4">
-            <a href="#privacy" className="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+            <a href="#privacy" className="hover:text-text-sec transition-colors">Privacy Policy</a>
             <span>•</span>
-            <a href="#terms" className="hover:text-zinc-300 transition-colors">Terms of Service</a>
+            <a href="#terms" className="hover:text-text-sec transition-colors">Terms of Service</a>
           </div>
           <div>
             <span>Version 1.0</span>
@@ -303,7 +303,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
       </div>
 
       {/* RIGHT SIDE: 60% Hero Visual Cover & Feature Cards */}
-      <div className="hidden lg:block lg:w-[60%] h-full relative bg-zinc-900">
+      <div className="hidden lg:block lg:w-[60%] h-full relative bg-warm-bg">
         {/* Full cover restaurant visual background image */}
         <img 
           src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=1200" 
@@ -318,25 +318,25 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
         <div className="absolute inset-0 flex flex-col justify-between p-16 xl:p-24 z-20">
           {/* Top Row badge */}
           <div className="flex justify-end">
-            <div className="bg-zinc-900/10 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[10px] text-zinc-100 font-extrabold uppercase tracking-wider">Powered by AI</span>
+            <div className="bg-warm-bg/10 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-forest-accent" />
+              <span className="text-[10px] text-text-main font-extrabold uppercase tracking-wider">Powered by AI</span>
             </div>
           </div>
 
           {/* Central Title and Taglines */}
           <div className="space-y-6 max-w-xl">
             <div className="space-y-2">
-              <h2 className="text-4xl xl:text-5xl font-black text-zinc-100 tracking-tight">
-                RestaurantOS <span className="text-amber-500 font-bold">AI</span>
+              <h2 className="text-4xl xl:text-5xl font-black text-text-main tracking-tight">
+                RestaurantOS <span className="text-forest-accent font-bold">AI</span>
               </h2>
-              <p className="text-sm xl:text-base text-zinc-300 font-medium leading-relaxed">
+              <p className="text-sm xl:text-base text-text-sec font-medium leading-relaxed">
                 Empowering world-class culinary venues with intelligent workflow automation, automated reports, dynamic order processing, and unified tracking.
               </p>
             </div>
 
             {/* List features bullet points */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-xs text-zinc-300 font-bold uppercase tracking-wider">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-xs text-text-sec font-bold uppercase tracking-wider">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>Manage Orders</span>
@@ -359,46 +359,46 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           {/* Four Informational Feature cards at the bottom */}
           <div className="grid grid-cols-4 gap-4">
             {/* Orders Card */}
-            <div className="bg-zinc-950/40 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
-              <div className="w-8 h-8 bg-transparent border border-amber-500/30 border border-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center">
+            <div className="bg-warm-bg/40 backdrop-blur-md border border-warm-border p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
+              <div className="w-8 h-8 bg-transparent border border-forest-accent/30 border border-forest-accent/20 text-forest-accent rounded-xl flex items-center justify-center">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest">Orders</h4>
-                <p className="text-[11px] text-zinc-100 font-bold mt-0.5">Instant KDS Routing</p>
+                <h4 className="text-[10px] text-text-sec font-extrabold uppercase tracking-widest">Orders</h4>
+                <p className="text-[11px] text-text-main font-bold mt-0.5">Instant KDS Routing</p>
               </div>
             </div>
 
             {/* Inventory Card */}
-            <div className="bg-zinc-950/40 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
-              <div className="w-8 h-8 bg-transparent border border-amber-500/30 border border-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center">
+            <div className="bg-warm-bg/40 backdrop-blur-md border border-warm-border p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
+              <div className="w-8 h-8 bg-transparent border border-forest-accent/30 border border-forest-accent/20 text-amber-400 rounded-xl flex items-center justify-center">
                 <Layers className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest">Inventory</h4>
-                <p className="text-[11px] text-zinc-100 font-bold mt-0.5">Low Stock Triggers</p>
+                <h4 className="text-[10px] text-text-sec font-extrabold uppercase tracking-widest">Inventory</h4>
+                <p className="text-[11px] text-text-main font-bold mt-0.5">Low Stock Triggers</p>
               </div>
             </div>
 
             {/* Finance Card */}
-            <div className="bg-zinc-950/40 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
+            <div className="bg-warm-bg/40 backdrop-blur-md border border-warm-border p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
               <div className="w-8 h-8 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center">
                 <BadgeIndianRupee className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest">Finance</h4>
-                <p className="text-[11px] text-zinc-100 font-bold mt-0.5">Automated Auditing</p>
+                <h4 className="text-[10px] text-text-sec font-extrabold uppercase tracking-widest">Finance</h4>
+                <p className="text-[11px] text-text-main font-bold mt-0.5">Automated Auditing</p>
               </div>
             </div>
 
             {/* Reports Card */}
-            <div className="bg-zinc-950/40 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
+            <div className="bg-warm-bg/40 backdrop-blur-md border border-warm-border p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
               <div className="w-8 h-8 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center">
                 <BarChart3 className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest">Reports</h4>
-                <p className="text-[11px] text-zinc-100 font-bold mt-0.5">Intelligent Insights</p>
+                <h4 className="text-[10px] text-text-sec font-extrabold uppercase tracking-widest">Reports</h4>
+                <p className="text-[11px] text-text-main font-bold mt-0.5">Intelligent Insights</p>
               </div>
             </div>
           </div>

@@ -158,68 +158,68 @@ ${restaurantState.suppliers.map(s => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-900 px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
+    <div className="flex-1 flex flex-col h-full bg-warm-bg px-3 py-4 sm:p-6 overflow-y-auto font-sans select-none animate-fade-in">
       
       {/* Page Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="pl-10 sm:pl-0">
-          <h1 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-amber-500" />
+          <h1 className="text-xl font-bold text-text-main tracking-tight flex items-center gap-2">
+            <LineChart className="w-5 h-5 text-forest-accent" />
             <span className="hidden sm:inline">AI Restaurant Operations Analytics</span>
             <span className="sm:hidden">Analytics</span>
           </h1>
-          <p className="hidden sm:block text-xs text-zinc-400 mt-0.5">Evaluate live margins, trace ingredient profit markups, analyze active safety violations, and compile business summaries.</p>
+          <p className="hidden sm:block text-xs text-text-sec mt-0.5">Evaluate live margins, trace ingredient profit markups, analyze active safety violations, and compile business summaries.</p>
         </div>
       </div>
 
       {/* Analytics Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
         {/* Total revenue */}
-        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-warm-bg border border-warm-border p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Completed Sales Revenue</span>
-              <h2 className="text-2xl font-black text-amber-500">₹{totalRevenue.toLocaleString()}</h2>
+              <span className="text-[10px] font-bold text-text-sec uppercase tracking-wider block">Completed Sales Revenue</span>
+              <h2 className="text-2xl font-black text-forest-accent">₹{totalRevenue.toLocaleString()}</h2>
             </div>
-            <span className="w-8 h-8 bg-transparent border border-amber-500/30 rounded-lg text-amber-500 flex items-center justify-center font-bold">
+            <span className="w-8 h-8 bg-transparent border border-forest-accent/30 rounded-lg text-forest-accent flex items-center justify-center font-bold">
               <ArrowUpRight className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
+          <div className="text-[10px] text-text-sec font-bold mt-4 pt-3.5 border-t border-warm-border uppercase">
             From {completedOrdersCount} completed orders
           </div>
         </div>
 
         {/* Total Expense */}
-        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-warm-bg border border-warm-border p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Supplier Disbursements</span>
+              <span className="text-[10px] font-bold text-text-sec uppercase tracking-wider block">Supplier Disbursements</span>
               <h2 className="text-2xl font-black text-rose-500">₹{totalExpense.toLocaleString()}</h2>
             </div>
             <span className="w-8 h-8 bg-red-500/10 rounded-lg text-rose-500 flex items-center justify-center font-bold">
               <ArrowDownRight className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
+          <div className="text-[10px] text-text-sec font-bold mt-4 pt-3.5 border-t border-warm-border uppercase">
             Total ledger expense payouts
           </div>
         </div>
 
         {/* Net Cashflow status */}
-        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
+        <div className="bg-warm-bg border border-warm-border p-5 rounded-[18px] shadow-2xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Net Ledger Cashflow</span>
-              <h2 className={`text-2xl font-black ${profitLoss >= 0 ? "text-amber-500" : "text-rose-500"}`}>
+              <span className="text-[10px] font-bold text-text-sec uppercase tracking-wider block">Net Ledger Cashflow</span>
+              <h2 className={`text-2xl font-black ${profitLoss >= 0 ? "text-forest-accent" : "text-rose-500"}`}>
                 ₹{profitLoss.toLocaleString()}
               </h2>
             </div>
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${profitLoss >= 0 ? "bg-transparent border border-amber-500/30 text-amber-500" : "bg-red-500/10 text-rose-500"}`}>
+            <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${profitLoss >= 0 ? "bg-transparent border border-forest-accent/30 text-forest-accent" : "bg-red-500/10 text-rose-500"}`}>
               <Coins className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-[10px] text-zinc-400 font-bold mt-4 pt-3.5 border-t border-zinc-800 uppercase">
+          <div className="text-[10px] text-text-sec font-bold mt-4 pt-3.5 border-t border-warm-border uppercase">
             Net operating surplus
           </div>
         </div>
@@ -229,14 +229,14 @@ ${restaurantState.suppliers.map(s => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         
         {/* Menu item markup list */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs">
-          <h3 className="font-bold text-sm text-zinc-100 tracking-tight mb-4 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-amber-500" />
+        <div className="bg-warm-bg border border-warm-border rounded-[18px] p-5 shadow-2xs">
+          <h3 className="font-bold text-sm text-text-main tracking-tight mb-4 flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-forest-accent" />
             <span>Recipe Profitability & Markup Index</span>
           </h3>
           <div className="space-y-3.5 max-h-[280px] overflow-y-auto">
             {restaurantState.menu.length === 0 ? (
-              <div className="text-center text-zinc-400 italic text-xs py-8">
+              <div className="text-center text-text-sec italic text-xs py-8">
                 No recipes registered in PostgreSQL database.
               </div>
             ) : (
@@ -245,14 +245,14 @@ ${restaurantState.suppliers.map(s => {
                 const marginPct = item.price > 0 ? Math.round((margin / item.price) * 100) : 0;
                 
                 return (
-                  <div key={item.id} className="flex justify-between items-center text-xs border-b border-zinc-800 pb-2">
+                  <div key={item.id} className="flex justify-between items-center text-xs border-b border-warm-border pb-2">
                     <div>
-                      <span className="font-bold text-zinc-100 block">{item.name}</span>
-                      <span className="text-[10px] text-zinc-400 font-semibold block uppercase">{item.category}</span>
+                      <span className="font-bold text-text-main block">{item.name}</span>
+                      <span className="text-[10px] text-text-sec font-semibold block uppercase">{item.category}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-extrabold text-zinc-100 block">₹{item.price} <span className="text-[10px] text-zinc-400 font-medium">(cost: ₹{item.cost})</span></span>
-                      <span className="text-[9.5px] font-black text-amber-500 block mt-0.5">
+                      <span className="font-extrabold text-text-main block">₹{item.price} <span className="text-[10px] text-text-sec font-medium">(cost: ₹{item.cost})</span></span>
+                      <span className="text-[9.5px] font-black text-forest-accent block mt-0.5">
                         {marginPct}% Margin • +₹{margin} Profit
                       </span>
                     </div>
@@ -264,27 +264,27 @@ ${restaurantState.suppliers.map(s => {
         </div>
 
         {/* Safety limits panel */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs">
+        <div className="bg-warm-bg border border-warm-border rounded-[18px] p-5 shadow-2xs">
           <h3 className="font-bold text-sm text-rose-800 tracking-tight mb-4 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-rose-500" />
             <span>Safety Limits & Stock Outstandings</span>
           </h3>
           <div className="space-y-3.5 max-h-[280px] overflow-y-auto">
-            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
-              <span className="text-zinc-400">Low Stock Safety Violations:</span>
-              <span className={`font-black ${lowStockItems.length > 0 ? "text-rose-500" : "text-zinc-100"}`}>{lowStockItems.length} items</span>
+            <div className="flex justify-between text-xs border-b border-warm-border pb-2">
+              <span className="text-text-sec">Low Stock Safety Violations:</span>
+              <span className={`font-black ${lowStockItems.length > 0 ? "text-rose-500" : "text-text-main"}`}>{lowStockItems.length} items</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
-              <span className="text-zinc-400">Unresolved Supplier Balances:</span>
-              <span className={`font-black ${pendingPaymentsTotal > 0 ? "text-amber-500-hover" : "text-zinc-100"}`}>₹{pendingPaymentsTotal.toLocaleString()}</span>
+            <div className="flex justify-between text-xs border-b border-warm-border pb-2">
+              <span className="text-text-sec">Unresolved Supplier Balances:</span>
+              <span className={`font-black ${pendingPaymentsTotal > 0 ? "text-text-sec" : "text-text-main"}`}>₹{pendingPaymentsTotal.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
-              <span className="text-zinc-400">Registered Guest Accounts:</span>
-              <span className="font-black text-zinc-100">{restaurantState.customers.length} profiles</span>
+            <div className="flex justify-between text-xs border-b border-warm-border pb-2">
+              <span className="text-text-sec">Registered Guest Accounts:</span>
+              <span className="font-black text-text-main">{restaurantState.customers.length} profiles</span>
             </div>
-            <div className="flex justify-between text-xs border-b border-zinc-800 pb-2">
-              <span className="text-zinc-400">Logistical Suppliers Linked:</span>
-              <span className="font-black text-zinc-100">{restaurantState.suppliers.length} vendors</span>
+            <div className="flex justify-between text-xs border-b border-warm-border pb-2">
+              <span className="text-text-sec">Logistical Suppliers Linked:</span>
+              <span className="font-black text-text-main">{restaurantState.suppliers.length} vendors</span>
             </div>
           </div>
         </div>
@@ -296,7 +296,7 @@ ${restaurantState.suppliers.map(s => {
         
         {/* Templates Selection */}
         <div className="lg:col-span-2 space-y-3">
-          <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider pl-1">Operational Audit Templates</div>
+          <div className="text-[10px] text-text-sec font-bold uppercase tracking-wider pl-1">Operational Audit Templates</div>
           <div className="space-y-2.5">
             {reportTypes.map(r => {
               const Icon = r.icon;
@@ -305,19 +305,19 @@ ${restaurantState.suppliers.map(s => {
               return (
                 <div 
                   key={r.id}
-                  className={`bg-zinc-900 border p-4.5 rounded-[18px] shadow-2xs transition-all flex flex-col gap-2 relative overflow-hidden ${
-                    isActive ? "border-emerald-500 bg-transparent border border-amber-500/30/10 shadow-xs" : "border-zinc-800 hover:border-zinc-800"
+                  className={`bg-warm-bg border p-4.5 rounded-[18px] shadow-2xs transition-all flex flex-col gap-2 relative overflow-hidden ${
+                    isActive ? "border-emerald-500 bg-transparent border border-forest-accent/30/10 shadow-xs" : "border-warm-border hover:border-warm-border"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isActive ? "bg-transparent border border-amber-500/30 text-amber-500" : "bg-zinc-950 text-zinc-400"
+                      isActive ? "bg-transparent border border-forest-accent/30 text-forest-accent" : "bg-warm-bg text-text-sec"
                     }`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-bold text-zinc-100 truncate">{r.title}</h4>
-                      <p className="text-[10px] text-zinc-400 line-clamp-1 mt-0.5">{r.desc}</p>
+                      <h4 className="text-xs font-bold text-text-main truncate">{r.title}</h4>
+                      <p className="text-[10px] text-text-sec line-clamp-1 mt-0.5">{r.desc}</p>
                     </div>
                   </div>
                   <div className="flex justify-end pt-1">
@@ -326,8 +326,8 @@ ${restaurantState.suppliers.map(s => {
                       disabled={isCompiling}
                       className={`text-[9.5px] font-black uppercase px-3 py-1.5 rounded-lg border cursor-pointer transition-all ${
                         isActive 
-                          ? "bg-zinc-950 text-zinc-100 border-transparent" 
-                          : "bg-zinc-950 hover:bg-zinc-950 text-zinc-300 border-zinc-800"
+                          ? "bg-warm-bg text-text-main border-transparent" 
+                          : "bg-warm-bg hover:bg-warm-bg text-text-sec border-warm-border"
                       }`}
                     >
                       {isActive && isCompiling ? "Compiling..." : "Compile Audit"}
@@ -341,14 +341,14 @@ ${restaurantState.suppliers.map(s => {
 
         {/* Report Output Panel */}
         <div className="lg:col-span-3 h-full flex flex-col min-h-[350px]">
-          <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-3 pl-1">Live Audit compiler output</div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-[18px] p-5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden">
+          <div className="text-[10px] text-text-sec font-bold uppercase tracking-wider mb-3 pl-1">Live Audit compiler output</div>
+          <div className="bg-warm-bg border border-warm-border rounded-[18px] p-5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden">
             {selectedReport ? (
               <div className="flex-1 flex flex-col justify-between h-full">
-                <div className="overflow-y-auto max-h-[300px] text-xs font-mono whitespace-pre-wrap text-zinc-300 leading-relaxed scrollbar-thin">
+                <div className="overflow-y-auto max-h-[300px] text-xs font-mono whitespace-pre-wrap text-text-sec leading-relaxed scrollbar-thin">
                   {reportText}
                 </div>
-                <div className="pt-4 border-t border-zinc-800 flex justify-end">
+                <div className="pt-4 border-t border-warm-border flex justify-end">
                   <button
                     onClick={() => {
                       const printWindow = window.open("", "_blank");
@@ -365,14 +365,14 @@ ${restaurantState.suppliers.map(s => {
                         printWindow.print();
                       }
                     }}
-                    className="bg-zinc-950 hover:bg-zinc-900 text-zinc-100 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
+                    className="bg-warm-bg hover:bg-warm-bg text-text-main font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
                   >
                     Print Audit Document
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-zinc-400 italic text-xs">
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-text-sec italic text-xs">
                 Select an operational template on the left and click "Compile Audit" to auto-compile PostgreSQL telemetry!
               </div>
             )}

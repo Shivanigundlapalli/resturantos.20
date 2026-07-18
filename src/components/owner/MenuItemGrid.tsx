@@ -46,23 +46,23 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
   };
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950">
-      <div className="p-8 border-b border-zinc-800 bg-zinc-900/50 flex gap-4 items-center justify-between">
+    <div className="h-full flex flex-col bg-warm-bg">
+      <div className="p-8 border-b border-warm-border bg-warm-bg/50 flex gap-4 items-center justify-between">
         <div className="flex gap-4 flex-1">
           <div className="relative w-80">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-sec" />
             <input 
               type="text" 
               placeholder="Search dishes..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 shadow-none font-medium"
+              className="w-full pl-9 pr-4 py-2.5 bg-warm-bg border border-warm-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 shadow-none font-medium"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveCategory("All")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${activeCategory === "All" ? "bg-zinc-900 text-zinc-100 shadow-black shadow-zinc-900/20" : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-950"}`}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${activeCategory === "All" ? "bg-warm-bg text-text-main shadow-sm shadow-zinc-900/20" : "bg-warm-bg border border-warm-border text-text-sec hover:bg-warm-bg"}`}
             >
               All Items
             </button>
@@ -70,7 +70,7 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${activeCategory === cat.id ? "bg-zinc-900 text-zinc-100 shadow-black shadow-zinc-900/20" : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-950"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${activeCategory === cat.id ? "bg-warm-bg text-text-main shadow-sm shadow-zinc-900/20" : "bg-warm-bg border border-warm-border text-text-sec hover:bg-warm-bg"}`}
               >
                 {cat.name}
               </button>
@@ -82,7 +82,7 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
             setEditingItem({ status: "Available", price: 0, tags: [] });
             setIsEditorOpen(true);
           }}
-          className="bg-amber-500 text-zinc-900 hover:bg-amber-600 px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-amber-500/10 transition-all shrink-0"
+          className="bg-forest-accent text-zinc-900 hover:bg-forest-hover px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-amber-500/10 transition-all shrink-0"
         >
           <Plus className="w-4 h-4" /> Add Dish
         </button>
@@ -91,8 +91,8 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredItems.map(item => (
-            <div key={item.id} className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-none hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col">
-              <div className="relative h-48 bg-zinc-950 overflow-hidden">
+            <div key={item.id} className="bg-warm-bg rounded-2xl border border-warm-border shadow-none hover:shadow-md transition-all duration-300 overflow-hidden group flex flex-col">
+              <div className="relative h-48 bg-warm-bg overflow-hidden">
                 {item.image ? (
                   <img 
                     src={item.image} 
@@ -102,10 +102,10 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
                     onLoad={(e) => (e.currentTarget.style.opacity = '1')} 
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-zinc-950 border-b border-zinc-800/50 p-4">
+                  <div className="w-full h-full flex flex-col gap-2 items-center justify-center bg-warm-bg border-b border-warm-border/50 p-4">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setEditingItem(item); setIsEditorOpen(true); }}
-                      className="w-full justify-center text-xs bg-zinc-900 text-zinc-300 px-3 py-2 rounded-lg font-bold border border-zinc-800 shadow-none flex items-center gap-2 hover:bg-zinc-950 hover:text-amber-500 transition-colors"
+                      className="w-full justify-center text-xs bg-warm-bg text-text-sec px-3 py-2 rounded-lg font-bold border border-warm-border shadow-none flex items-center gap-2 hover:bg-warm-bg hover:text-forest-accent transition-colors"
                     >
                       <Upload className="w-3.5 h-3.5" /> Upload Image
                     </button>
@@ -121,12 +121,12 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex gap-2 flex-wrap max-w-[80%]">
                   {item.isVeg && (
-                    <span className="bg-transparent border border-amber-500/30 text-amber-500 text-[10px] font-bold px-2 py-1 rounded-md border border-amber-500/20 shadow-none backdrop-blur-md">
+                    <span className="bg-transparent border border-forest-accent/30 text-forest-accent text-[10px] font-bold px-2 py-1 rounded-md border border-forest-accent/20 shadow-none backdrop-blur-md">
                       VEG
                     </span>
                   )}
                   {item.tags?.map(tag => (
-                    <span key={tag} className="bg-zinc-900/90 text-zinc-100 text-[10px] font-bold px-2 py-1 rounded-md border border-white/40 shadow-none backdrop-blur-md">
+                    <span key={tag} className="bg-warm-bg/90 text-text-main text-[10px] font-bold px-2 py-1 rounded-md border border-white/40 shadow-none backdrop-blur-md">
                       {tag.toUpperCase()}
                     </span>
                   ))}
@@ -138,9 +138,9 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
                     value={item.status}
                     onChange={(e) => handleToggleStatus(item, e.target.value)}
                     className={`text-xs font-bold px-3 py-1.5 rounded-lg border shadow-none outline-none cursor-pointer appearance-none pr-8 ${
-                      item.status === 'Available' ? 'bg-emerald-500 text-zinc-100 border-emerald-500' : 
-                      item.status === 'Out Of Stock' ? 'bg-red-500 text-zinc-100 border-red-600' :
-                      'bg-amber-500 text-zinc-900 border-emerald-500'
+                      item.status === 'Available' ? 'bg-emerald-500 text-text-main border-emerald-500' : 
+                      item.status === 'Out Of Stock' ? 'bg-red-500 text-text-main border-red-600' :
+                      'bg-forest-accent text-zinc-900 border-emerald-500'
                     }`}
                   >
                     <option value="Available">Available</option>
@@ -154,23 +154,23 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
 
               <div className="p-5 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-zinc-100 leading-tight">{item.name}</h3>
-                  <div className="text-lg font-black text-amber-500">${item.price.toFixed(2)}</div>
+                  <h3 className="font-bold text-lg text-text-main leading-tight">{item.name}</h3>
+                  <div className="text-lg font-black text-forest-accent">${item.price.toFixed(2)}</div>
                 </div>
                 
-                <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
+                <p className="text-sm text-text-sec line-clamp-2 mb-4 flex-1">
                   {item.short_description || item.description || "No description provided."}
                 </p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                  <div className="text-xs text-zinc-400 font-medium bg-zinc-950 px-2.5 py-1 rounded-md">
+                <div className="flex items-center justify-between pt-4 border-t border-warm-border">
+                  <div className="text-xs text-text-sec font-medium bg-warm-bg px-2.5 py-1 rounded-md">
                     {item.category || "Uncategorized"}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => { setEditingItem(item); setIsEditorOpen(true); }} className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                    <button onClick={() => { setEditingItem(item); setIsEditorOpen(true); }} className="p-2 text-text-sec hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors">
+                    <button onClick={() => handleDelete(item.id)} className="p-2 text-text-sec hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
