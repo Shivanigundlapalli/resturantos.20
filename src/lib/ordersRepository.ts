@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { query, getPool } from "./db";
-import { Order, OrderItem, Customer, MenuItem, InventoryItem, Supplier, FinanceEntry } from "../types";
+import { query, getPool } from "./db.js";
+import { Order, OrderItem, Customer, MenuItem, InventoryItem, Supplier, FinanceEntry } from "../types.js";
 
 export class OrdersRepository {
   async getCategories(): Promise<any[]> {

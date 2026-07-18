@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { RestaurantState, ChatMessage, ChatResponse } from "../types";
+import { RestaurantState, ChatMessage, ChatResponse } from "../types.js";
 
 // Master Orchestrator Intent Classifier Response Schema
 interface OrchestratorClassification {

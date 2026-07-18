@@ -9,12 +9,12 @@ import jwt from "jsonwebtoken";
 import multer from "multer";
 import crypto from "crypto";
 import Razorpay from "razorpay";
-import { evaluateThresholds, getNotificationState, scanInventoryOnStartup, sendOtpSms } from "./src/lib/twilioService";
-import { RestaurantState, ChatMessage, ChatResponse } from "./src/types";
-import { bootstrapDatabase, getPool, seedMenuIfEmpty } from "./src/lib/db";
-import { OrdersService } from "./src/lib/ordersService";
-import { runMultiAgentSystem } from "./src/lib/agents";
-import { generateAndSendBusinessReport } from "./src/lib/reportService";
+import { evaluateThresholds, getNotificationState, scanInventoryOnStartup, sendOtpSms } from "./src/lib/twilioService.js";
+import { RestaurantState, ChatMessage, ChatResponse } from "./src/types.js";
+import { bootstrapDatabase, getPool, seedMenuIfEmpty } from "./src/lib/db.js";
+import { OrdersService } from "./src/lib/ordersService.js";
+import { runMultiAgentSystem } from "./src/lib/agents.js";
+import { generateAndSendBusinessReport } from "./src/lib/reportService.js";
 
 const __dirname = process.cwd();
 
