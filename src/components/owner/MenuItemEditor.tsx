@@ -199,23 +199,13 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
                       className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-text-sec mb-2">Category *</label>
-                      <select 
-                        required value={formData.category_id || ""}
-                        onChange={e => setFormData({...formData, category_id: e.target.value})}
-                        className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
-                      >
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </div>
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-text-sec mb-2">Dietary Preference</label>
                       <select 
                         value={formData.dietary_preference || "Veg"}
                         onChange={e => setFormData({...formData, dietary_preference: e.target.value})}
-                        className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none"
+                        className="w-full px-4 py-3 bg-warm-bg border border-warm-border rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-emerald-500 font-medium appearance-none text-text-main placeholder-text-muted"
                       >
                         <option value="Veg">Vegetarian</option>
                         <option value="Non Veg">Non-Vegetarian</option>

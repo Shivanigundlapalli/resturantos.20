@@ -285,9 +285,14 @@ export default function InventoryView({
 
   // Filtering & Sorting
   let filteredData = localInventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (item.supplierName && item.supplierName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    const safeSearchQuery = (searchQuery || "").toLowerCase();
+    const safeName = (item.name || "").toLowerCase();
+    const safeSupplier = (item.supplierName || "").toLowerCase();
+    const safeCategory = (item.category || "").toLowerCase();
+
+    const matchesSearch = safeName.includes(safeSearchQuery) || 
+                          safeSupplier.includes(safeSearchQuery) ||
+                          safeCategory.includes(safeSearchQuery);
     
     let matchesStatus = true;
     if (filterStatus === "Healthy") matchesStatus = item.currentQty > item.reorderLevel;
