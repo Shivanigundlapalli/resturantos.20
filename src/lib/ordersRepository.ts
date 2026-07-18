@@ -816,10 +816,29 @@ export class OrdersRepository {
       )
       RETURNING id
     `, [
-      item.category_id, item.name, item.description, item.short_description, item.price, item.discounted_price, item.gst_percentage || 5,
-      item.image, item.images || [], item.preparation_time || 15, item.calories, item.spice_level, item.dietary_preference, item.tags || [], item.timing_slot,
-      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : '[]', item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : '[]', item.status || 'Available',
-      item.is_veg !== undefined ? item.is_veg : true, item.is_special || false, item.is_recommended || false
+      parseInt(item.category_id) || 1, 
+      item.name, 
+      item.description || null, 
+      item.short_description || null, 
+      parseFloat(item.price) || 0, 
+      item.discounted_price ? parseFloat(item.discounted_price) : null, 
+      item.gst_percentage ? parseFloat(item.gst_percentage) : 5,
+      item.image || null, 
+      item.images ? JSON.stringify(item.images) : '[]', 
+      item.preparation_time ? parseInt(item.preparation_time) : 15, 
+      item.calories ? parseInt(item.calories) : null, 
+      item.spice_level || null, 
+      item.dietary_preference || null, 
+      item.tags ? JSON.stringify(item.tags) : '[]', 
+      item.timing_slot || null,
+      item.stock_type || null, 
+      item.current_stock ? parseInt(item.current_stock) : 0, 
+      item.addons ? JSON.stringify(item.addons) : '[]', 
+      item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : '[]', 
+      item.status || 'Available',
+      item.isVeg !== undefined ? item.isVeg : (item.is_veg !== undefined ? item.is_veg : true), 
+      item.is_special || false, 
+      item.is_recommended || false
     ]);
     return res.rows[0];
   }

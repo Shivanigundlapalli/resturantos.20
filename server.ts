@@ -772,7 +772,7 @@ app.get("/menu", handleGetMenu);
         return res.status(201).json({ success: true, data: fullItem, message: "Menu item created successfully" });
       } catch (err: any) {
         console.error("Create menu item failed:", err);
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({ success: false, error: err.message });
       }
     }
     
