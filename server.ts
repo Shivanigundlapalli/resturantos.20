@@ -659,8 +659,8 @@ const handleGetMenu = async (req: express.Request, res: express.Response) => {
     const menu = await ordersService.getMenuItems();
     return res.json({ success: true, data: (menu || []).map(normalize) });
   } catch (err: any) {
-    console.error("[GET /api/menu] Database fetch failed, falling back to fake data:", err.message);
-    return res.json({ success: true, data: dbState.menu.map(normalize) }); // FALLBACK TO FAKE DATA
+    console.error("[GET /api/menu] Database fetch failed:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 app.get("/api/menu", handleGetMenu);
@@ -669,22 +669,14 @@ app.get("/menu", handleGetMenu);
 
   // --- Categories API ---
   const handleGetCategories = async (req: express.Request, res: express.Response) => {
-    if (getPool()) {
-      try {
-        const categories = await ordersService.getCategories();
-        return res.json(categories || []);
-      } catch (err: any) {
-        console.error("[GET /api/categories] Database fetch failed, falling back to fake data:", err.message);
-        // Fallback below
-      }
+    if (!getPool()) return res.json([]);
+    try {
+      const categories = await ordersService.getCategories();
+      return res.json(categories || []);
+    } catch (err: any) {
+      console.error("[GET /api/categories] Database fetch failed:", err);
+      return res.status(500).json({ success: false, error: err.message });
     }
-    // Fake data fallback
-    res.json([
-      { id: 'cat_1', name: 'Main Course', display_order: 1 },
-      { id: 'cat_2', name: 'Curry', display_order: 2 },
-      { id: 'cat_3', name: 'Breads', display_order: 3 }
-    ]);
-    res.json([]);
   };
   app.get("/api/categories", handleGetCategories);
 
@@ -759,15 +751,12 @@ app.get("/menu", handleGetMenu);
         const fullItem = { ...normalizedItem, id: item.id };
         return res.status(201).json({ success: true, data: fullItem, message: "Menu item created successfully" });
       } catch (err: any) {
-        console.error("Create menu item failed in DB, falling back to fake memory:", err.message);
-        // Do not return 500! Fall through to fake memory!
+        console.error("[POST /api/menu] ERROR:", err);
+        return res.status(500).json({ success: false, error: err.message });
       }
+    } else {
+      return res.status(500).json({ success: false, error: "Database not connected" });
     }
-    
-    normalizedItem.category_id = normalizedItem.category_id || "1";
-    const newItem = { id: `m_${Date.now()}`, ...normalizedItem };
-    dbState.menu.push(newItem);
-    return res.status(201).json({ success: true, data: newItem, message: "Menu item created successfully (Fake Data Fallback)" });
   };
   app.post("/api/menu", requireOwner, handleCreateMenu);
 
