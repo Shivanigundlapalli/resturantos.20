@@ -386,3 +386,46 @@ export async function bootstrapDatabase() {
     console.error("Error bootstrapping database tables:", err);
   }
 }
+
+export async function seedMenuIfEmpty() {
+  const p = getPool();
+  if (!p) return;
+  try {
+    const res = await p.query(`SELECT COUNT(*) as count FROM menu_items`);
+    if (parseInt(res.rows[0].count) === 0) {
+      console.log("Menu table is empty. Seeding 5 realistic sample items...");
+      
+      const restRes = await p.query(`SELECT id FROM restaurants LIMIT 1`);
+      const restId = restRes.rows.length > 0 ? restRes.rows[0].id : 1;
+
+      // Seed categories
+      await p.query(`INSERT INTO menu_categories (restaurant_id, name, display_order) VALUES 
+        ($1, 'Main Course', 1),
+        ($1, 'Curry', 2),
+        ($1, 'Breads', 3)
+        ON CONFLICT DO NOTHING
+      `, [restId]);
+
+      const mainCourseRes = await p.query(`SELECT id FROM menu_categories WHERE name = 'Main Course' LIMIT 1`);
+      const curryRes = await p.query(`SELECT id FROM menu_categories WHERE name = 'Curry' LIMIT 1`);
+      const breadsRes = await p.query(`SELECT id FROM menu_categories WHERE name = 'Breads' LIMIT 1`);
+      
+      const mcId = mainCourseRes.rows[0]?.id || 1;
+      const cId = curryRes.rows[0]?.id || 1;
+      const bId = breadsRes.rows[0]?.id || 1;
+
+      await p.query(`
+        INSERT INTO menu_items (restaurant_id, category_id, name, price, is_veg, popularity, status, image_url, description) VALUES 
+        ($1, $2, 'Chicken Biryani', 400, false, 5, 'Available', 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=600', 'Aromatic basmati rice cooked with tender chicken and authentic spices.'),
+        ($1, $2, 'Mutton Biryani', 600, false, 5, 'Available', 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?q=80&w=600', 'Rich and flavorful slow-cooked mutton biryani with aromatic spices.'),
+        ($1, $2, 'Veg Pulao', 250, true, 4, 'Available', 'https://images.unsplash.com/photo-1516684732162-798a0062be99?q=80&w=600', 'Fragrant basmati rice cooked with fresh seasonal vegetables.'),
+        ($1, $3, 'Paneer Butter Masala', 320, true, 5, 'Available', 'https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?q=80&w=600', 'Soft paneer cubes simmered in a rich, creamy tomato gravy.'),
+        ($1, $4, 'Butter Naan', 60, true, 5, 'Available', 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=600', 'Soft and fluffy Indian flatbread brushed with butter.')
+      `, [restId, mcId, cId, bId]);
+      
+      console.log("Successfully seeded 5 sample menu items.");
+    }
+  } catch (err) {
+    console.error("Error seeding menu:", err);
+  }
+}

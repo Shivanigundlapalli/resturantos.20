@@ -872,10 +872,30 @@ export class OrdersRepository {
       WHERE id = $24
       RETURNING id
     `, [
-      item.category_id, item.name, item.description, item.short_description, item.price, item.discounted_price, item.gst_percentage,
-      item.image, item.images, item.preparation_time, item.calories, item.spice_level, item.dietary_preference, item.tags, item.timing_slot,
-      item.stock_type, item.current_stock, item.addons ? JSON.stringify(item.addons) : null, item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : null, item.status, 
-      item.is_veg, item.is_special, item.is_recommended, id
+      item.category_id ? parseInt(item.category_id) : null, 
+      item.name || null, 
+      item.description || null, 
+      item.short_description || null, 
+      item.price ? parseFloat(item.price) : null, 
+      item.discounted_price ? parseFloat(item.discounted_price) : null, 
+      item.gst_percentage ? parseFloat(item.gst_percentage) : null,
+      item.image || null, 
+      item.images ? JSON.stringify(item.images) : null, 
+      item.preparation_time ? parseInt(item.preparation_time) : null, 
+      item.calories ? parseInt(item.calories) : null, 
+      item.spice_level || null, 
+      item.dietary_preference || null, 
+      item.tags ? JSON.stringify(item.tags) : null, 
+      item.timing_slot || null,
+      item.stock_type || null, 
+      item.current_stock ? parseInt(item.current_stock) : null, 
+      item.addons ? JSON.stringify(item.addons) : null, 
+      item.removable_ingredients ? JSON.stringify(item.removable_ingredients) : null, 
+      item.status || null, 
+      item.isVeg !== undefined ? item.isVeg : (item.is_veg !== undefined ? item.is_veg : null), 
+      item.is_special !== undefined ? item.is_special : null, 
+      item.is_recommended !== undefined ? item.is_recommended : null, 
+      id
     ]);
     return res.rows[0];
   }

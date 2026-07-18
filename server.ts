@@ -11,7 +11,7 @@ import crypto from "crypto";
 import Razorpay from "razorpay";
 import { evaluateThresholds, getNotificationState, scanInventoryOnStartup, sendOtpSms } from "./src/lib/twilioService";
 import { RestaurantState, ChatMessage, ChatResponse } from "./src/types";
-import { bootstrapDatabase, getPool } from "./src/lib/db";
+import { bootstrapDatabase, getPool, seedMenuIfEmpty } from "./src/lib/db";
 import { OrdersService } from "./src/lib/ordersService";
 import { runMultiAgentSystem } from "./src/lib/agents";
 import { generateAndSendBusinessReport } from "./src/lib/reportService";
@@ -248,9 +248,12 @@ async function startServer() {
   // Bootstrap the PostgreSQL database (Non-blocking on Vercel to prevent cold-start timeouts)
   if (process.env.DATABASE_URL) {
     if (process.env.VERCEL) {
-      bootstrapDatabase().catch(e => console.error("Vercel DB Bootstrap Error:", e));
+      bootstrapDatabase()
+        .then(() => seedMenuIfEmpty())
+        .catch(e => console.error("Vercel DB Bootstrap Error:", e));
     } else {
       await bootstrapDatabase();
+      await seedMenuIfEmpty();
       await scanInventoryOnStartup();
     }
   }
