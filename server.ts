@@ -247,14 +247,14 @@ export const broadcastState = () => {
 async function startServer() {
   // Bootstrap the PostgreSQL database (Non-blocking on Vercel to prevent cold-start timeouts)
   if (process.env.DATABASE_URL) {
-    if (process.env.VERCEL) {
-      bootstrapDatabase()
-        .then(() => seedMenuIfEmpty())
-        .catch(e => console.error("Vercel DB Bootstrap Error:", e));
-    } else {
+    try {
       await bootstrapDatabase();
       await seedMenuIfEmpty();
-      await scanInventoryOnStartup();
+      if (!process.env.VERCEL) {
+        await scanInventoryOnStartup();
+      }
+    } catch (e) {
+      console.error("DB Bootstrap Error:", e);
     }
   }
 
