@@ -217,18 +217,19 @@ export const broadcastState = () => {
   sseClients.forEach(client => client.res.write(`data: ${data}\n\n`));
 };
 
-async function startServer() {
-  // Bootstrap the PostgreSQL database (Non-blocking on Vercel to prevent cold-start timeouts)
+function startServer() {
+  // Bootstrap the PostgreSQL database (Non-blocking)
   if (process.env.DATABASE_URL) {
-    try {
-      await bootstrapDatabase();
-      await seedMenuIfEmpty();
-      if (!process.env.VERCEL) {
-        await scanInventoryOnStartup();
-      }
-    } catch (e) {
-      console.error("DB Bootstrap Error:", e);
-    }
+    bootstrapDatabase()
+      .then(() => seedMenuIfEmpty())
+      .then(() => {
+        if (!process.env.VERCEL) {
+          return scanInventoryOnStartup();
+        }
+      })
+      .catch((e) => {
+        console.error("DB Bootstrap Error:", e);
+      });
   }
 
   const app = express();
@@ -1991,4 +1992,4 @@ app.post("/api/upload", requireOwner, upload.single("image"), (req, res) => {
 }
 
 
-  export const appPromise = startServer();
+export const app = startServer();
