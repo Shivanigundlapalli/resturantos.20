@@ -30,9 +30,11 @@
 | 🧾 **Sales & Billing** | Create new orders, generate customer invoices, filter/search order history, and print thermal receipts |
 | 💰 **Finance Ledger** | Full credit/debit cash-flow ledger — track income from sales and expenses from supplier settlements |
 | 📊 **Analytics Dashboard** | Live business KPIs, revenue analysis, profit margins, menu performance, and ingredient cost breakdowns |
-| ⚙️ **Settings** | Configure restaurant profile, manage AI integration, run diagnostics, and reset the demo database |
-| 🔐 **Authentication** | JWT-based login system with role-based access and session persistence |
-| 🎙️ **Voice Input** | Browser speech recognition for hands-free AI command entry (Indian English optimized) |
+| ⚙️ **Settings & Integrations** | Configure restaurant profile, manage AI integration, run diagnostics, and reset the demo database |
+| 🔐 **Authentication** | Secure JWT-based login system with role-based access and session persistence |
+| 🎙️ **Voice Input** | Browser speech recognition for hands-free AI command entry (optimized for various accents) |
+| 📞 **Twilio Alerts** | Automated WhatsApp messages and emergency voice calls to suppliers for low-stock alerts |
+| 💳 **Razorpay Integration** | Integrated online payment processing for seamless customer checkout |
 | 📱 **Fully Responsive** | Adapts to all screen sizes — mobile, tablet, and desktop with a slide-in hamburger drawer |
 
 ---
@@ -52,18 +54,19 @@
 ### Backend
 | Technology | Purpose |
 |---|---|
-| **FastAPI** | Python REST API framework |
-| **Uvicorn** | ASGI server |
-| **Google Gemini AI** (`google-genai`) | AI Agent reasoning & orchestration |
-| **Supabase (PostgreSQL)** | Cloud database |
-| **PyJWT** | JWT authentication tokens |
-| **Pydantic v2** | Request/response schema validation |
+| **Node.js** + **Express** | Fast and scalable REST API |
+| **TypeScript** | Type-safe backend logic |
+| **Google Gemini AI** | Primary AI Agent reasoning & orchestration |
+| **OpenAI** | Fallback AI processing |
+| **Supabase (PostgreSQL)** | Cloud relational database |
+| **Twilio** | SMS, WhatsApp, and Voice notifications |
+| **Razorpay** | Payment Gateway |
 
 ### Deployment
 | Service | Role |
 |---|---|
 | **Vercel** | Frontend hosting + static build |
-| **Render** | FastAPI backend hosting |
+| **Render** | Node.js backend hosting |
 | **Supabase** | Managed PostgreSQL database |
 
 ---
@@ -73,38 +76,19 @@
 ```
 restaurantOs/
 ├── src/                         # React frontend
-│   ├── components/
-│   │   ├── AgentView.tsx        # AI chat interface with voice input
-│   │   ├── Sidebar.tsx          # Responsive sidebar with mobile drawer
-│   │   ├── RightPanel.tsx       # Quick commands & live status panel
-│   │   ├── InventoryView.tsx    # Stock levels, menu & prep management
-│   │   ├── SalesView.tsx        # Orders, billing & invoicing
-│   │   ├── FinanceView.tsx      # Cash flow ledger
-│   │   ├── AnalyticsView.tsx    # Business KPIs & analytics
-│   │   ├── SettingsView.tsx     # System configuration
-│   │   ├── LoginView.tsx        # Authentication UI
-│   │   ├── MarkdownRenderer.tsx # AI response markdown renderer
-│   │   └── ErrorBoundary.tsx    # Graceful error handling
+│   ├── components/              # UI Components (Sidebar, Analytics, Inventory, etc.)
+│   ├── customer/                # Customer-facing views (Menu, Cart, Checkout)
+│   ├── owner/                   # Owner/Admin views (Menu Management)
 │   ├── services/                # API client utilities
 │   ├── lib/                     # Shared helpers
 │   ├── types.ts                 # TypeScript type definitions
 │   └── App.tsx                  # Root application with state management
 │
-├── backend/
-│   ├── app/
-│   │   ├── agents/              # Gemini AI orchestrator & tools
-│   │   ├── api/                 # FastAPI route handlers
-│   │   ├── schemas.py           # Pydantic data models
-│   │   ├── supabase_client.py   # Supabase DB connection
-│   │   ├── config.py            # Environment configuration
-│   │   └── main.py              # FastAPI app entry point
-│   ├── run_supervisor.py        # Uvicorn server launcher
-│   └── requirements.txt         # Python dependencies
-│
-├── api/                         # Vercel serverless function bridge
+├── server.ts                    # Main Express backend entry point
+├── src/lib/                     # Backend services (Twilio, Razorpay, Reports)
+├── package.json                 # Node.js dependencies and scripts
 ├── vercel.json                  # Vercel deployment config
-├── vite.config.ts               # Vite dev proxy config
-└── package.json                 # Node.js dependencies
+└── vite.config.ts               # Vite dev proxy config
 ```
 
 ---
@@ -113,17 +97,17 @@ restaurantOs/
 
 ### Prerequisites
 - **Node.js** v18+
-- **Python** 3.10+
 - A **Gemini API Key** → [Get one here](https://aistudio.google.com/app/apikey)
 - A **Supabase** project with PostgreSQL → [supabase.com](https://supabase.com)
+- **Twilio** and **Razorpay** accounts for SMS/Payments (Optional for local dev)
 
 ---
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Thanuja1305/restrauntos-version-to-final.git
-cd restrauntos-version-to-final
+git clone https://github.com/Shivanigundlapalli/resturantos.20.git
+cd resturantos.20
 ```
 
 ---
@@ -136,22 +120,11 @@ Copy the example file and fill in your secrets:
 cp .env.example .env
 ```
 
-Edit `.env`:
-
-```env
-# Supabase PostgreSQL connection string
-DATABASE_URL="postgresql://postgres:[password]@[host]:5432/postgres"
-
-# Google Gemini AI API Key
-GEMINI_API_KEY="your-gemini-api-key-here"
-
-# Your deployed app URL (used for internal API references)
-APP_URL="http://localhost:5173"
-```
+Ensure your `.env` contains your API keys for Supabase, Gemini, OpenAI, Twilio, and Razorpay.
 
 ---
 
-### 3. Install Frontend Dependencies
+### 3. Install Dependencies
 
 ```bash
 npm install
@@ -159,25 +132,17 @@ npm install
 
 ---
 
-### 4. Install Backend Dependencies
-
-```bash
-pip install -r backend/requirements.txt
-```
-
----
-
-### 5. Run Locally
+### 4. Run Locally
 
 Open **two terminals**:
 
-**Terminal 1 — Start the FastAPI backend:**
+**Terminal 1 — Start the Express Backend:**
 ```bash
-python backend/run_supervisor.py
+npm run dev:backend
 ```
 > Backend runs on `http://127.0.0.1:8000`
 
-**Terminal 2 — Start the Vite dev server:**
+**Terminal 2 — Start the Vite Frontend:**
 ```bash
 npm run dev
 ```
@@ -185,7 +150,7 @@ npm run dev
 
 ---
 
-### 6. Login
+### 5. Login
 
 Open [http://localhost:5173](http://localhost:5173) and use the demo credentials:
 
@@ -223,21 +188,12 @@ The `vercel.json` is pre-configured:
 - `/api/*` requests are proxied to the Render backend
 - All other routes fall back to `index.html` for client-side routing
 
-```json
-{
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://restrauntos-version-to-final.onrender.com/api/:path*" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
-}
-```
-
 ### Backend → Render
 
-Deploy the `backend/` directory as a **Python Web Service** on Render:
-- **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `python run_supervisor.py`
-- Set all environment variables (`DATABASE_URL`, `GEMINI_API_KEY`) in the Render dashboard
+Deploy the project as a **Web Service** on Render:
+- **Build Command:** `npm install`
+- **Start Command:** `npx tsx server.ts`
+- Set all environment variables in the Render dashboard.
 
 ---
 
@@ -280,6 +236,8 @@ Built with 💚 by **Team Prompt Orchestrators** for the AI Hackathon:
 
 - [Google Gemini AI](https://ai.google.dev) — AI Agent reasoning engine
 - [Supabase](https://supabase.com) — PostgreSQL database platform
+- [Twilio](https://twilio.com) — Communications platform
+- [Razorpay](https://razorpay.com) — Payment Gateway
 - [Vercel](https://vercel.com) — Frontend deployment
 - [Render](https://render.com) — Backend deployment
 - [Framer Motion](https://www.framer.com/motion/) — UI animations
@@ -294,6 +252,6 @@ Built with 💚 by **Team Prompt Orchestrators** for the AI Hackathon:
 
 *Team Prompt Orchestrators — Thanuja · Shivani · Akshitha · Srija*
 
-[🚀 Live Demo](https://restrauntos-version-to-final.vercel.app) • [🐛 Report Bug](https://github.com/Thanuja1305/restrauntos-version-to-final/issues) • [💡 Request Feature](https://github.com/Thanuja1305/restrauntos-version-to-final/issues)
+[🚀 Live Demo](https://restrauntos-version-to-final.vercel.app) • [🐛 Report Bug](https://github.com/Shivanigundlapalli/resturantos.20/issues) • [💡 Request Feature](https://github.com/Shivanigundlapalli/resturantos.20/issues)
 
 </div>
