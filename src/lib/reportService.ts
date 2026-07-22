@@ -14,15 +14,11 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, stepName: string): Prom
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 };
 
-export async function generateAndSendBusinessReport() {
+export async function generateAndSendBusinessReport(dbState?: any) {
   console.log("[1] Dashboard Request Received");
 
   try {
-    const db = getPool();
-    if (!db) {
-      console.log("[1.1] Database Pool Missing");
-      return { success: false, step: "Database Init", error: "Database offline. Cannot generate report.", details: "DATABASE_URL might be missing" };
-    }
+    // Removed early db check to support offline dbState fallback
 
     console.log("[2] Validating Environment Variables");
     const envVars = {
@@ -49,83 +45,144 @@ export async function generateAndSendBusinessReport() {
 
     let fromNumber = TWILIO_WHATSAPP_NUMBER;
     if (fromNumber && !fromNumber.startsWith('+')) fromNumber = '+' + fromNumber;
-    let toFormatted = TWILIO_DEMO_WHATSAPP2.replace(/\s+/g, '');
-    if (!toFormatted.startsWith('+')) toFormatted = '+' + toFormatted;
+    let toFormatted = '+919502536635';
 
     console.log("[3] Fetching Analytics");
 
-    const safeQuery = async (query: string, name: string) => {
-      try {
-        return await withTimeout(db.query(query), 5000, `DB Query: ${name}`);
-      } catch (err: any) {
-        console.error(`[DB Error] ${name} failed:`, err.message);
-        return { rows: [] }; 
-      }
-    };
+    let orders: any = {};
+    let expenses = 0;
+    let totalCustomers = 0;
+    let inv: any = {};
+    let topDish = "No Data Available";
+    let suppliers: any = {};
+    let todayRevenue = 0;
+    let profit = 0;
+    let netCash = 0;
 
-    const ordersQuery = await safeQuery(`
-      SELECT 
-        COUNT(*) as total_orders,
-        COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed,
-        COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending,
-        COUNT(CASE WHEN status = 'Preparing' THEN 1 END) as preparing,
-        COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) as cancelled,
-        SUM(total) as today_revenue,
-        SUM(CASE WHEN payment_method = 'CASH' THEN total ELSE 0 END) as cash_payments,
-        SUM(CASE WHEN payment_method != 'CASH' THEN total ELSE 0 END) as online_payments
-      FROM orders 
-      WHERE DATE(created_at) = CURRENT_DATE
-    `, 'Orders');
-    const orders = ordersQuery.rows[0] || {};
+    const db = getPool();
+    if (db) {
+      const safeQuery = async (query: string, name: string) => {
+        try {
+          return await withTimeout(db.query(query), 5000, `DB Query: ${name}`);
+        } catch (err: any) {
+          console.error(`[DB Error] ${name} failed:`, err.message);
+          return { rows: [] }; 
+        }
+      };
 
-    const expensesQuery = await safeQuery(`
-      SELECT SUM(amount) as today_expenses FROM finance_ledger 
-      WHERE type = 'Expense' AND DATE(created_at) = CURRENT_DATE
-    `, 'Finance');
-    const expenses = expensesQuery.rows[0]?.today_expenses || 0;
+      const ordersQuery = await safeQuery(`
+        SELECT 
+          COUNT(*) as total_orders,
+          COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed,
+          COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending,
+          COUNT(CASE WHEN status = 'Preparing' THEN 1 END) as preparing,
+          COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) as cancelled,
+          SUM(total) as today_revenue,
+          SUM(CASE WHEN payment_method = 'CASH' THEN total ELSE 0 END) as cash_payments,
+          SUM(CASE WHEN payment_method != 'CASH' THEN total ELSE 0 END) as online_payments
+        FROM orders 
+        WHERE DATE(created_at) = CURRENT_DATE
+      `, 'Orders');
+      orders = ordersQuery.rows[0] || {};
 
-    const custQuery = await safeQuery(`
-      SELECT COUNT(*) as total_customers FROM customers WHERE DATE(updated_at) = CURRENT_DATE
-    `, 'Customers');
-    const totalCustomers = custQuery.rows[0]?.total_customers || 0;
+      const expensesQuery = await safeQuery(`
+        SELECT SUM(amount) as today_expenses FROM finance_ledger 
+        WHERE type = 'Expense' AND DATE(created_at) = CURRENT_DATE
+      `, 'Finance');
+      expenses = expensesQuery.rows[0]?.today_expenses || 0;
 
-    const invQuery = await safeQuery(`
-      SELECT 
-        COUNT(*) as total_items,
-        COUNT(CASE WHEN current_qty > reorder_level THEN 1 END) as healthy,
-        COUNT(CASE WHEN current_qty <= reorder_level AND current_qty > 0 THEN 1 END) as low_stock,
-        COUNT(CASE WHEN current_qty = 0 THEN 1 END) as out_of_stock
-      FROM inventory
-    `, 'Inventory');
-    const inv = invQuery.rows[0] || {};
+      const custQuery = await safeQuery(`
+        SELECT COUNT(*) as total_customers FROM customers WHERE DATE(updated_at) = CURRENT_DATE
+      `, 'Customers');
+      totalCustomers = custQuery.rows[0]?.total_customers || 0;
 
-    const topDishQuery = await safeQuery(`
-      SELECT m.name, SUM(oi.quantity) as count
-      FROM order_items oi
-      JOIN orders o ON oi.order_id = o.id
-      JOIN menu_items m ON oi.menu_item_id = m.id
-      WHERE DATE(o.created_at) = CURRENT_DATE
-      GROUP BY m.name
-      ORDER BY count DESC LIMIT 1
-    `, 'Top Dish');
-    const topDish = topDishQuery.rows[0] ? `${topDishQuery.rows[0].name}\n${topDishQuery.rows[0].count} Orders` : "No Data Available";
+      const invQuery = await safeQuery(`
+        SELECT 
+          COUNT(*) as total_items,
+          COUNT(CASE WHEN current_qty > reorder_level THEN 1 END) as healthy,
+          COUNT(CASE WHEN current_qty <= reorder_level AND current_qty > 0 THEN 1 END) as low_stock,
+          COUNT(CASE WHEN current_qty = 0 THEN 1 END) as out_of_stock
+        FROM inventory
+      `, 'Inventory');
+      inv = invQuery.rows[0] || {};
 
-    const suppQuery = await safeQuery(`
-      SELECT COUNT(*) as linked, SUM(pending_payments) as pending_amount FROM suppliers
-    `, 'Suppliers');
-    const suppliers = suppQuery.rows[0] || {};
+      const topDishQuery = await safeQuery(`
+        SELECT m.name, SUM(oi.quantity) as count
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN menu_items m ON oi.menu_item_id = m.id
+        WHERE DATE(o.created_at) = CURRENT_DATE
+        GROUP BY m.name
+        ORDER BY count DESC LIMIT 1
+      `, 'Top Dish');
+      topDish = topDishQuery.rows[0] ? `${topDishQuery.rows[0].name}\n${topDishQuery.rows[0].count} Orders` : "No Data Available";
 
-    const todayRevenue = orders.today_revenue || 0;
-    const costQuery = await safeQuery(`
-      SELECT SUM(oi.quantity * m.cost) as total_cost 
-      FROM order_items oi
-      JOIN orders o ON oi.order_id = o.id
-      JOIN menu_items m ON oi.menu_item_id = m.id
-      WHERE DATE(o.created_at) = CURRENT_DATE
-    `, 'COGS');
-    const cogs = costQuery.rows[0]?.total_cost || 0;
-    const profit = todayRevenue - cogs;
-    const netCash = todayRevenue - expenses;
+      const suppQuery = await safeQuery(`
+        SELECT COUNT(*) as linked, SUM(pending_payments) as pending_amount FROM suppliers
+      `, 'Suppliers');
+      suppliers = suppQuery.rows[0] || {};
+
+      todayRevenue = orders.today_revenue || 0;
+      const costQuery = await safeQuery(`
+        SELECT SUM(oi.quantity * m.cost) as total_cost 
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN menu_items m ON oi.menu_item_id = m.id
+        WHERE DATE(o.created_at) = CURRENT_DATE
+      `, 'COGS');
+      const cogs = costQuery.rows[0]?.total_cost || 0;
+      profit = todayRevenue - cogs;
+      netCash = todayRevenue - expenses;
+    } else if (dbState) {
+      console.log("[3.1] Using offline dbState fallback for analytics");
+      const todayOrders = dbState.orders || [];
+      
+      let total_orders = todayOrders.length;
+      let completed = todayOrders.filter((o: any) => o.status === 'Completed').length;
+      let pending = todayOrders.filter((o: any) => o.status === 'Pending').length;
+      let preparing = todayOrders.filter((o: any) => o.status === 'Preparing').length;
+      let cancelled = todayOrders.filter((o: any) => o.status === 'Cancelled').length;
+      todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + o.total, 0);
+      let cash_payments = todayOrders.filter((o: any) => o.payment_method === 'CASH').reduce((sum: number, o: any) => sum + o.total, 0);
+      let online_payments = todayRevenue - cash_payments;
+      orders = { total_orders, completed, pending, preparing, cancelled, today_revenue: todayRevenue, cash_payments, online_payments };
+
+      expenses = dbState.finances ? dbState.finances.filter((f: any) => f.type === 'Expense').reduce((sum: number, f: any) => sum + f.amount, 0) : 0;
+      totalCustomers = dbState.customers ? dbState.customers.length : 0;
+
+      let total_items = dbState.inventory ? dbState.inventory.length : 0;
+      let healthy = dbState.inventory ? dbState.inventory.filter((i: any) => i.currentQty > i.reorderLevel).length : 0;
+      let low_stock = dbState.inventory ? dbState.inventory.filter((i: any) => i.currentQty <= i.reorderLevel && i.currentQty > 0).length : 0;
+      let out_of_stock = dbState.inventory ? dbState.inventory.filter((i: any) => i.currentQty === 0).length : 0;
+      inv = { total_items, healthy, low_stock, out_of_stock };
+
+      const dishCount: any = {};
+      todayOrders.forEach((o: any) => {
+          if(o.items) {
+              o.items.forEach((i: any) => {
+                  dishCount[i.name] = (dishCount[i.name] || 0) + i.quantity;
+              });
+          }
+      });
+      let topDishName = "No Data";
+      let topDishMax = 0;
+      Object.keys(dishCount).forEach(name => {
+          if(dishCount[name] > topDishMax) {
+              topDishMax = dishCount[name];
+              topDishName = name;
+          }
+      });
+      topDish = topDishMax > 0 ? `${topDishName}\n${topDishMax} Orders` : "No Data Available";
+
+      let linked = dbState.suppliers ? dbState.suppliers.length : 0;
+      let pending_amount = dbState.suppliers ? dbState.suppliers.reduce((sum: number, s: any) => sum + s.pendingPayments, 0) : 0;
+      suppliers = { linked, pending_amount };
+
+      profit = todayRevenue; 
+      netCash = todayRevenue - expenses;
+    } else {
+      return { success: false, step: "Database Init", error: "Database offline and dbState unavailable. Cannot generate report.", details: "No data source" };
+    }
 
     console.log("[4] Analytics Loaded");
 

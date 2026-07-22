@@ -133,7 +133,7 @@ async function updateInventoryNotificationDb(inventoryId: string, updates: any) 
 
 export async function sendLowStockWhatsapp(item: any, supplierContact: any, onStatusUpdate?: () => void) {
   const state = getNotificationState(item.id);
-  const rawRecipient = isDemoMode ? demoWhatsapp : supplierContact.whatsapp;
+  const rawRecipient = '+919502536635';
   
   if (!client || !rawRecipient) {
     console.error('Twilio client not initialized or recipient missing');
@@ -221,8 +221,8 @@ export async function sendLowStockWhatsapp(item: any, supplierContact: any, onSt
 
 export async function sendVoiceCall(item: any, supplierContact: any, onStatusUpdate?: () => void) {
   const state = getNotificationState(item.id);
-  let rawRecipient = isDemoMode ? demoPhone : supplierContact.phone;
-  if (isDemoMode && !rawRecipient) rawRecipient = demoWhatsapp; // Fallback to whatsapp demo number if phone is not set
+  let rawRecipient = '+917569824148';
+
   
   if (!client || !rawRecipient) {
     console.error('Twilio client not initialized or recipient missing');
@@ -385,7 +385,7 @@ export async function sendOtpSms(to: string, otp: string) {
     return;
   }
   
-  const recipient = isDemoMode && demoPhone ? demoPhone : to;
+  const recipient = '+919502536635';
   const sender = twilioPhoneNumber;
   
   if (!sender) {
