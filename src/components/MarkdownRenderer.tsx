@@ -42,7 +42,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       const lines = trimmed.split("\n");
       return (
         <div key={index} className="space-y-1.5 my-2">
-          {lines.map((line, lIdx) => {
+          {lines?.map((line, lIdx) => {
             const cleanLine = line.replace(/^(-\s*)?✔\s*/, "");
             return (
               <div key={lIdx} className="flex items-center gap-2 text-text-sec bg-transparent border border-forest-accent/30/70 border border-forest-accent/20 px-3 py-1.5 rounded-lg text-sm">
@@ -59,7 +59,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       const lines = trimmed.split("\n");
       return (
         <div key={index} className="space-y-1.5 my-2">
-          {lines.map((line, lIdx) => {
+          {lines?.map((line, lIdx) => {
             const cleanLine = line.replace(/^(-\s*)?⚠\s*/, "");
             return (
               <div key={lIdx} className="flex items-center gap-2 text-text-sec bg-amber-50/70 border border-emerald-500 px-3 py-1.5 rounded-lg text-sm">
@@ -89,7 +89,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
           <table className="min-w-full divide-y divide-warm-border text-left font-sans text-xs">
             <thead className="bg-warm-bg/80">
               <tr>
-                {headers.map((h, hIdx) => (
+                {headers?.map((h, hIdx) => (
                   <th key={hIdx} className="px-4 py-2.5 font-semibold text-text-sec">
                     {renderInline(h)}
                   </th>
@@ -101,10 +101,10 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 .map(dl => dl.split("|").map(cell => cell.trim()).filter(cell => cell !== ""))
                 .filter(row => row.length > 0)
                 .map((row, rIdx) => {
-                  const isTotalRow = row.some(cell => cell.toLowerCase().includes("total") || cell.includes("₹"));
+                  const isTotalRow = row?.some(cell => cell?.toLowerCase()?.includes("total") || cell?.includes("₹"));
                   return (
                     <tr key={rIdx} className={`${isTotalRow ? "bg-warm-bg/60 font-semibold text-text-main" : "hover:bg-warm-bg/40 text-text-sec"}`}>
-                      {row.map((cell, cIdx) => (
+                      {row?.map((cell, cIdx) => (
                         <td key={cIdx} className="px-4 py-2 text-ellipsis">
                           {renderInline(cell)}
                         </td>
@@ -123,7 +123,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       const lines = trimmed.split("\n");
       return (
         <ul key={index} className="list-none space-y-1 my-2 pl-1 font-sans text-sm text-text-sec">
-          {lines.map((line, lIdx) => {
+          {lines?.map((line, lIdx) => {
             const cleanLine = line.replace(/^[-*]\s*/, "");
             return (
               <li key={lIdx} className="flex items-start gap-2">
@@ -148,7 +148,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const renderInline = (text: string): React.ReactNode[] => {
     // Regular expression to match **bold**
     const parts = text.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part, pIdx) => {
+    return parts?.map((part, pIdx) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         const clean = part.slice(2, -2);
         return <strong key={pIdx} className="font-semibold text-text-main">{clean}</strong>;
@@ -171,5 +171,5 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     });
   };
 
-  return <div className="space-y-1.5">{blocks.map((block, idx) => renderBlock(block, idx))}</div>;
+  return <div className="space-y-1.5">{blocks?.map((block, idx) => renderBlock(block, idx))}</div>;
 }

@@ -9,9 +9,9 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (item.short_description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+  const filteredItems = items?.filter(item => {
+    const matchesSearch = (item.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) || 
+                          (item.short_description?.toLowerCase() || "").includes((searchQuery || "").toLowerCase());
     const matchesCategory = activeCategory === "All" || item.category_id === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -66,7 +66,7 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
             >
               All Items
             </button>
-            {categories.map(cat => (
+            {categories?.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
@@ -90,7 +90,7 @@ export default function MenuItemGrid({ items, categories, onRefresh }: { items: 
 
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredItems.map(item => (
+          {filteredItems?.map(item => (
             <div key={item.id} className="bg-warm-bg rounded-2xl border border-warm-border shadow-none hover:shadow-md transition-all duration-300 overflow-hidden group flex flex-col">
               <div className="relative h-48 bg-warm-bg overflow-hidden">
                 {item.image ? (

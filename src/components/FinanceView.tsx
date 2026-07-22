@@ -10,17 +10,17 @@ interface FinanceViewProps {
 export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
   const [filterType, setFilterType] = useState<"All" | "Income" | "Expense">("All");
 
-  const filteredFinances = finances.filter(f => {
+  const filteredFinances = finances?.filter(f => {
     return filterType === "All" || f.type === filterType;
   });
 
   const totalIncome = finances
-    .filter(f => f.type === "Income")
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    ?.filter(f => f.type === "Income")
+    ?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
   const totalExpense = finances
-    .filter(f => f.type === "Expense")
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    ?.filter(f => f.type === "Expense")
+    ?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
   const netCashFlow = totalIncome - totalExpense;
 
@@ -71,16 +71,16 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
       <div className="bg-warm-bg border border-warm-border rounded-[18px] p-4.5 mb-5 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="px-4 py-2 border-r border-warm-border">
           <span className="text-[10px] text-text-sec font-bold uppercase tracking-wider block">Cumulative Income (Credits)</span>
-          <div className="text-lg font-black text-forest-accent mt-0.5">₹{totalIncome.toLocaleString()}</div>
+          <div className="text-lg font-black text-forest-accent mt-0.5">₹{(totalIncome || 0).toLocaleString()}</div>
         </div>
         <div className="px-4 py-2 border-r border-warm-border">
           <span className="text-[10px] text-text-sec font-bold uppercase tracking-wider block">Cumulative Expenses (Debits)</span>
-          <div className="text-lg font-black text-rose-500 mt-0.5">₹{totalExpense.toLocaleString()}</div>
+          <div className="text-lg font-black text-rose-500 mt-0.5">₹{(totalExpense || 0).toLocaleString()}</div>
         </div>
         <div className="px-4 py-2">
           <span className="text-[10px] text-text-sec font-bold uppercase tracking-wider block">Net Operating Capital</span>
           <div className={`text-lg font-black mt-0.5 ${netCashFlow >= 0 ? "text-forest-accent" : "text-rose-500"}`}>
-            ₹{netCashFlow.toLocaleString()}
+            ₹{(netCashFlow || 0).toLocaleString()}
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
                   </td>
                 </tr>
               ) : (
-                filteredFinances.map(entry => {
+                filteredFinances?.map(entry => {
                   const isIncome = entry.type === "Income";
 
                   return (
@@ -141,7 +141,7 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
 
                       {/* Date */}
                       <td className="px-5 py-4 text-text-sec font-mono text-[10px]">
-                        {new Date(entry.timestamp).toLocaleString()}
+                        {entry?.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A'}
                       </td>
 
                       {/* Category */}
@@ -183,7 +183,7 @@ export default function FinanceView({ finances, onAddLog }: FinanceViewProps) {
                       <td className={`px-5 py-4 text-right font-black font-mono text-xs ${
                         isIncome ? "text-forest-accent font-extrabold" : "text-rose-500"
                       }`}>
-                        {isIncome ? "+" : "-"} ₹{entry.amount.toLocaleString()}
+                        {isIncome ? "+" : "-"} ₹{(entry?.amount || 0).toLocaleString()}
                       </td>
                     </tr>
                   );

@@ -32,9 +32,9 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
   const menuItems = [
     { id: "agent", label: "AI Agent", icon: Bot },
     { id: "menu", label: "Menu", icon: Menu },
-    { id: "inventory", label: "Inventory", icon: Warehouse, badge: restaurantState.inventory.filter(i => i.currentQty <= i.reorderLevel).length ? "Low" : undefined },
+    { id: "inventory", label: "Inventory", icon: Warehouse, badge: restaurantState.inventory?.filter(i => i.currentQty <= i.reorderLevel).length ? "Low" : undefined },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "orders-board", label: "Live Orders", icon: KanbanSquare, badge: restaurantState.orders.filter(o => o.status === "Pending").length || undefined },
+    { id: "orders-board", label: "Live Orders", icon: KanbanSquare, badge: restaurantState.orders?.filter(o => o.status === "Pending").length || undefined },
     { id: "sales", label: "Sales List", icon: ShoppingBag },
     { id: "finance", label: "Finance", icon: Coins },
     { id: "analytics", label: "Analytics", icon: LineChart },
@@ -74,7 +74,7 @@ export default function Sidebar({ activeTab, setActiveTab, restaurantState, onLo
       {/* Main Navigation links */}
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
         <div className="text-[10px] text-warm-card/40 font-semibold tracking-wider uppercase px-3 mb-2">OPERATING SYSTEM</div>
-        {menuItems.map((item) => {
+        {menuItems?.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (

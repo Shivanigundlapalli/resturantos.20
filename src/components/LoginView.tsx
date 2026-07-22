@@ -357,7 +357,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           </div>
 
           {/* Four Informational Feature cards at the bottom */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Orders Card */}
             <div className="bg-warm-bg/40 backdrop-blur-md border border-warm-border p-4 rounded-2xl flex flex-col justify-between gap-3 text-left">
               <div className="w-8 h-8 bg-transparent border border-forest-accent/30 border border-forest-accent/20 text-forest-accent rounded-xl flex items-center justify-center">
@@ -407,3 +407,4 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     </div>
   );
 }
+

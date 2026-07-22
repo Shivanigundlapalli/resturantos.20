@@ -23,25 +23,25 @@ export default function DashboardView({ restaurantState, setActiveTab }: Dashboa
   const { orders, inventory, menu } = restaurantState;
 
   // Calculate live stats
-  const todayOrders = orders.filter(o => new Date(o.timestamp).toDateString() === new Date().toDateString());
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-  const activeOrders = orders.filter(o => !["Completed", "Cancelled"].includes(o.status));
-  const kitchenQueue = orders.filter(o => o.status === "Preparing" || o.status === "Accepted").length;
+  const todayOrders = orders?.filter(o => new Date(o.timestamp).toDateString() === new Date().toDateString());
+  const todayRevenue = todayOrders?.reduce((sum, o) => sum + o.total, 0);
+  const activeOrders = orders?.filter(o => !["Completed", "Cancelled"].includes(o.status));
+  const kitchenQueue = orders?.filter(o => o.status === "Preparing" || o.status === "Accepted").length;
   
-  const onlineRevenue = todayOrders.filter(o => o.payment_method !== "CASH").reduce((sum, o) => sum + o.total, 0);
-  const cashRevenue = todayOrders.filter(o => o.payment_method === "CASH").reduce((sum, o) => sum + o.total, 0);
+  const onlineRevenue = todayOrders?.filter(o => o.payment_method !== "CASH").reduce((sum, o) => sum + o.total, 0);
+  const cashRevenue = todayOrders?.filter(o => o.payment_method === "CASH").reduce((sum, o) => sum + o.total, 0);
 
-  const lowStockItems = inventory.filter(i => i.currentQty <= i.reorderLevel);
+  const lowStockItems = inventory?.filter(i => i.currentQty <= i.reorderLevel);
 
   // Twilio Notification Metrics
   const today = new Date().toDateString();
-  const lowStockNotificationsToday = inventory.filter(i => 
+  const lowStockNotificationsToday = inventory?.filter(i => 
     (i.whatsapp_sent_at && new Date(i.whatsapp_sent_at).toDateString() === today) || 
     (i.voice_called_at && new Date(i.voice_called_at).toDateString() === today)
   ).length;
-  const whatsappAlertsSent = inventory.filter(i => i.whatsapp_status === 'Sent').length;
-  const voiceCallsMade = inventory.filter(i => i.voice_status === 'Completed').length;
-  const failedNotifications = inventory.filter(i => i.whatsapp_status === 'Failed' || i.voice_status === 'Failed').length;
+  const whatsappAlertsSent = inventory?.filter(i => i.whatsapp_status === 'Sent').length;
+  const voiceCallsMade = inventory?.filter(i => i.voice_status === 'Completed').length;
+  const failedNotifications = inventory?.filter(i => i.whatsapp_status === 'Failed' || i.voice_status === 'Failed').length;
   
   const allNotificationTimes = inventory
     .map(i => Math.max(i.whatsapp_sent_at ? new Date(i.whatsapp_sent_at).getTime() : 0, i.voice_called_at ? new Date(i.voice_called_at).getTime() : 0))
@@ -125,8 +125,8 @@ export default function DashboardView({ restaurantState, setActiveTab }: Dashboa
             </div>
             <div className="text-2xl font-black text-text-main">{todayOrders.length}</div>
             <div className="flex items-center gap-3 mt-2 text-[10px] font-semibold">
-              <span className="text-forest-accent">{todayOrders.filter(o => o.status === 'Completed').length} Completed</span>
-              <span className="text-rose-500">{todayOrders.filter(o => o.status === 'Cancelled').length} Cancelled</span>
+              <span className="text-forest-accent">{todayOrders?.filter(o => o.status === 'Completed').length} Completed</span>
+              <span className="text-rose-500">{todayOrders?.filter(o => o.status === 'Cancelled').length} Cancelled</span>
             </div>
           </motion.div>
 

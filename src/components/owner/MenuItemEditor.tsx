@@ -307,7 +307,7 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
                         Suggest Retail Price
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-forest-accent mb-1">Food Cost ($)</label>
                         <input 
@@ -337,7 +337,7 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
                 <section className="bg-warm-bg p-6 rounded-2xl border border-warm-border shadow-none space-y-4">
                   <h3 className="text-sm font-bold text-text-sec uppercase tracking-wider mb-2">Health & Diet</h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-text-sec mb-2">Calories (kcal)</label>
                       <input 
@@ -399,7 +399,7 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
                 <section className="bg-warm-bg p-6 rounded-2xl border border-warm-border shadow-none space-y-4">
                   <h3 className="text-sm font-bold text-text-sec uppercase tracking-wider mb-2">Lifecycle & Availability</h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-text-sec mb-2">Publish Status</label>
                       <select 
@@ -435,7 +435,7 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="bg-warm-bg p-8 rounded-3xl flex justify-center items-center">
                   {/* Mock Mobile Device */}
-                  <div className="w-[320px] bg-warm-bg rounded-[2rem] shadow-2xl overflow-hidden border-8 border-warm-border relative">
+                  <div className="w-[90vw] max-w-[320px] sm:w-[320px] bg-warm-bg rounded-[2rem] shadow-2xl overflow-hidden border-8 border-warm-border relative">
                     <div className="h-6 bg-warm-bg absolute top-0 w-full z-20 flex justify-center rounded-b-xl">
                       <div className="w-16 h-4 bg-warm-bg rounded-b-xl"></div>
                     </div>
@@ -511,3 +511,5 @@ export default function MenuItemEditor({ item, categories, onClose, onSave }: { 
     </div>
   );
 }
+
+

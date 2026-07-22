@@ -36,9 +36,9 @@ export default function MenuManagement() {
   }, []);
 
   const totalItems = menuItems.length;
-  const activeItems = menuItems.filter(i => i.status === "Available").length;
-  const outOfStockItems = menuItems.filter(i => i.status === "Out Of Stock").length;
-  const hiddenItems = menuItems.filter(i => i.status === "Discontinued").length;
+  const activeItems = menuItems?.filter(i => i.status === "Available").length;
+  const outOfStockItems = menuItems?.filter(i => i.status === "Out Of Stock").length;
+  const hiddenItems = menuItems?.filter(i => i.status === "Discontinued").length;
   const bestCategory = categories.length > 0 ? categories[0].name : "N/A"; // Simplified for now
 
   return (
@@ -52,7 +52,7 @@ export default function MenuManagement() {
         </div>
 
         {/* Dashboard Summary Cards */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <StatCard icon={<Utensils />} label="Total Items" value={totalItems} color="text-text-sec" bg="bg-warm-bg" />
           <StatCard icon={<TrendingUp />} label="Active Items" value={activeItems} color="text-forest-accent" bg="bg-transparent border border-forest-accent/30" />
           <StatCard icon={<AlertCircle />} label="Out of Stock" value={outOfStockItems} color="text-red-600" bg="bg-red-500/10" />
@@ -130,3 +130,4 @@ function TabButton({ active, onClick, icon, label }: { active: boolean, onClick:
     </button>
   );
 }
+

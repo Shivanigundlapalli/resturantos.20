@@ -39,9 +39,9 @@ export default function RightPanel({ onTriggerPrompt, restaurantState }: RightPa
   ];
 
   // Calculate live restaurant status from state
-  const activeOrdersCount = restaurantState.orders.filter(o => o.status === "Pending").length;
-  const completedTodayCount = restaurantState.orders.filter(o => o.status === "Completed").length;
-  const criticalLowStock = restaurantState.inventory.filter(i => i.currentQty <= i.reorderLevel).length;
+  const activeOrdersCount = restaurantState.orders?.filter(o => o.status === "Pending").length;
+  const completedTodayCount = restaurantState.orders?.filter(o => o.status === "Completed").length;
+  const criticalLowStock = restaurantState.inventory?.filter(i => i.currentQty <= i.reorderLevel).length;
 
   return (
     <aside id="utility-panel-container" className="w-[300px] bg-warm-bg border-l border-warm-border p-5 flex flex-col gap-6 overflow-y-auto shrink-0 h-full font-sans select-none">
@@ -85,7 +85,7 @@ export default function RightPanel({ onTriggerPrompt, restaurantState }: RightPa
           <span>Recent Conversations</span>
         </div>
         <div className="space-y-1.5">
-          {recentChats.map((chat, idx) => (
+          {recentChats?.map((chat, idx) => (
             <button
               key={idx}
               onClick={() => onTriggerPrompt(chat.text)}
@@ -105,7 +105,7 @@ export default function RightPanel({ onTriggerPrompt, restaurantState }: RightPa
           <span>Pinned Commands</span>
         </div>
         <div className="space-y-1.5">
-          {pinnedCommands.map((cmd, idx) => (
+          {pinnedCommands?.map((cmd, idx) => (
             <button
               key={idx}
               onClick={() => onTriggerPrompt(cmd.prompt)}
@@ -125,7 +125,7 @@ export default function RightPanel({ onTriggerPrompt, restaurantState }: RightPa
           <span>Quick Templates</span>
         </div>
         <div className="space-y-1.5">
-          {quickTemplates.map((temp, idx) => (
+          {quickTemplates?.map((temp, idx) => (
             <button
               key={idx}
               onClick={() => onTriggerPrompt(temp.prompt)}

@@ -125,7 +125,7 @@ export default function AiImageGenerator({ isOpen, onClose, initialFoodName, onS
 
         <div className="flex flex-1 overflow-hidden">
           {/* Controls Sidebar */}
-          <div className="w-80 bg-warm-bg border-r border-warm-border p-6 flex flex-col gap-6 overflow-y-auto">
+          <div className="w-full md:w-80 bg-warm-bg border-r border-warm-border p-6 flex flex-col gap-6 overflow-y-auto">
             <div>
               <label className="block text-xs font-black text-text-main uppercase tracking-wider mb-2">Subject (Food Name)</label>
               <input 
@@ -207,7 +207,7 @@ export default function AiImageGenerator({ isOpen, onClose, initialFoodName, onS
               </div>
             ) : generatedImages.length > 0 ? (
               <div className="grid grid-cols-2 gap-4 h-full">
-                {generatedImages.map((url, i) => (
+                {generatedImages?.map((url, i) => (
                   <div key={i} className="group relative bg-warm-bg rounded-2xl overflow-hidden border border-warm-border">
                     <img src={url} alt={`Generated option ${i+1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     
@@ -254,3 +254,4 @@ export default function AiImageGenerator({ isOpen, onClose, initialFoodName, onS
     </div>
   );
 }
+

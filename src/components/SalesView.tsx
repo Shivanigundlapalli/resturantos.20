@@ -796,7 +796,7 @@ export default function SalesView({
                 </div>
 
                 {isNewCustomer ? (
-                  <div className="grid grid-cols-2 gap-3 bg-warm-bg p-3.5 rounded-[14px] border border-warm-border/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-warm-bg p-3.5 rounded-[14px] border border-warm-border/50">
                     <div className="space-y-1">
                       <span className="text-[9px] text-text-sec font-bold uppercase">Customer Name *</span>
                       <input
@@ -876,7 +876,7 @@ export default function SalesView({
               </div>
 
               {/* Service Style & Dine In Details */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="font-bold text-text-main uppercase tracking-wide text-[10px]">Service Style / Dining Type</label>
                   <div className="bg-warm-bg p-1.5 rounded-[14px] border border-warm-border/50 relative">
@@ -1001,7 +1001,7 @@ export default function SalesView({
               </div>
 
               {/* Billing Discounts & Deductions */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <span className="text-[10px] text-text-sec font-bold uppercase block">Special Promo Discount (₹)</span>
                   <input
@@ -1062,3 +1062,4 @@ export default function SalesView({
     </div>
   );
 }
+

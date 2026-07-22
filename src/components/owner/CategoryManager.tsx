@@ -81,7 +81,7 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
       </div>
 
       <div className="grid gap-4 max-w-4xl">
-        {categories.map((cat) => (
+        {categories?.map((cat) => (
           <div 
             key={cat.id} 
             className={`bg-warm-bg border ${cat.is_active ? 'border-warm-border' : 'border-warm-border opacity-60'} p-4 rounded-2xl shadow-none flex items-center justify-between group transition-all hover:shadow-sm`}
@@ -137,7 +137,7 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
 
       {isModalOpen && editingCat && (
         <div className="fixed inset-0 bg-warm-bg/40 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-[500px] bg-warm-bg h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
+          <div className="w-full sm:w-[500px] bg-warm-bg h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
             <div className="p-6 border-b border-warm-border flex justify-between items-center bg-warm-bg">
               <h2 className="text-xl font-bold text-text-main">{editingCat.id ? 'Edit Category' : 'New Category'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-text-sec hover:text-text-sec p-2 rounded-full hover:bg-warm-bg">✕</button>
@@ -210,3 +210,4 @@ export default function CategoryManager({ categories, onRefresh }: { categories:
     </div>
   );
 }
+

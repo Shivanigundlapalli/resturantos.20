@@ -318,7 +318,7 @@ export default function AgentView({
               <div className="space-y-4">
                 <div className="text-xs text-text-main font-bold uppercase tracking-wider pl-1">Try asking me something like...</div>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {suggestions.map((sug, idx) => (
+                  {suggestions?.map((sug, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSuggestionClick(sug.prompt)}
@@ -342,7 +342,7 @@ export default function AgentView({
           ) : (
             // Chat Logs View
             <div className="max-w-4xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-end">
-              {messages.map((msg) => {
+              {messages?.map((msg) => {
                 const isAI = msg.sender === "ai";
                 return (
                   <motion.div

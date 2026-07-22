@@ -34,16 +34,16 @@ export default function AnalyticsView({ restaurantState }: AnalyticsViewProps) {
 
   const profitLoss = totalRevenue - totalExpense;
 
-  const lowStockItems = restaurantState.inventory.filter(
+  const lowStockItems = restaurantState.inventory?.filter(
     item => item.currentQty <= item.reorderLevel
   );
 
-  const pendingPaymentsTotal = restaurantState.suppliers.reduce(
+  const pendingPaymentsTotal = restaurantState.suppliers?.reduce(
     (acc, s) => acc + s.pendingPayments, 0
   );
 
   const totalOrdersCount = restaurantState.orders.length;
-  const completedOrdersCount = restaurantState.orders.filter(o => o.status === "Completed").length;
+  const completedOrdersCount = restaurantState.orders?.filter(o => o.status === "Completed").length;
 
   const reportTypes = [
     { 
@@ -81,7 +81,7 @@ export default function AnalyticsView({ restaurantState }: AnalyticsViewProps) {
 
       if (reportId === "sales") {
         const orderCount = restaurantState.orders.length;
-        const totalRev = restaurantState.orders.reduce((acc, o) => acc + o.total, 0);
+        const totalRev = restaurantState.orders?.reduce((acc, o) => acc + o.total, 0);
         const avgTicket = orderCount > 0 ? Math.round(totalRev / orderCount) : 0;
 
         doc = `# Live Sales & Margins Audit Report
@@ -98,7 +98,7 @@ export default function AnalyticsView({ restaurantState }: AnalyticsViewProps) {
 - **Completed Database Transactions:** ${completedOrdersCount} orders
 
 ## 2. Recipe Popularity & Cost Markup Margins
-${restaurantState.menu.map(item => {
+${restaurantState.menu?.map(item => {
   const margin = item.price - item.cost;
   const markupPct = item.cost > 0 ? Math.round((margin / item.cost) * 100) : 100;
   return `- **${item.name} (${item.category}):** ₹${item.price} sell / ₹${item.cost} cost. (Margin: ₹${margin}, Markup: ${markupPct}%)`;
@@ -121,7 +121,7 @@ Our raw ingredients auditor has detected **${lowStockItems.length} ingredients**
 ${lowStockItems.length === 0 ? "✔ All raw materials are well within safe operating limits." : `
 | Material Item | Current Stock Level | Reorder Safety Level | Cost Basis | Action |
 | :--- | :---: | :---: | :---: | :--- |
-${lowStockItems.map(item => {
+${lowStockItems?.map(item => {
   return `| **${item.name}** | **${item.currentQty} ${item.unit}** | ${item.reorderLevel} ${item.unit} | ₹${item.unitPrice} | 🚚 restock advised |`;
 }).join("\n")}
 `}
@@ -143,7 +143,7 @@ Cumulative outstanding liabilities to third-party distributors sum up to **₹${
 ${restaurantState.suppliers.length === 0 ? "No supplier accounts registered in PostgreSQL." : `
 | Vendor ID | Distributor Company | Key Agent | Outstanding Liabilities | Primary Ingredients Supplied | Status |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-${restaurantState.suppliers.map(s => {
+${restaurantState.suppliers?.map(s => {
   return `| **${s.id}** | **${s.companyName}** | ${s.contactPerson} | **₹${s.pendingPayments.toLocaleString()}** | ${s.itemsSupplied.join(", ")} | ${s.pendingPayments > 0 ? "⚠ Due" : "✔ Settled"} |`;
 }).join("\n")}
 `}
@@ -240,7 +240,7 @@ ${restaurantState.suppliers.map(s => {
                 No recipes registered in PostgreSQL database.
               </div>
             ) : (
-              restaurantState.menu.map(item => {
+              restaurantState.menu?.map(item => {
                 const margin = item.price - item.cost;
                 const marginPct = item.price > 0 ? Math.round((margin / item.price) * 100) : 0;
                 
@@ -298,7 +298,7 @@ ${restaurantState.suppliers.map(s => {
         <div className="lg:col-span-2 space-y-3">
           <div className="text-[10px] text-text-sec font-bold uppercase tracking-wider pl-1">Operational Audit Templates</div>
           <div className="space-y-2.5">
-            {reportTypes.map(r => {
+            {reportTypes?.map(r => {
               const Icon = r.icon;
               const isActive = selectedReport === r.id;
 

@@ -186,8 +186,8 @@ export default function InventoryView({
       });
       if (res.ok) {
         showToast("Ingredient Deleted Successfully", "success");
-        setLocalInventory(prev => prev.filter(i => i.id !== id));
-        onUpdateInventory(localInventory.filter(i => i.id !== id));
+        setLocalInventory(prev => prev?.filter(i => i.id !== id));
+        onUpdateInventory(localInventory?.filter(i => i.id !== id));
       } else {
         showToast("Database Error", "error");
       }
@@ -279,13 +279,13 @@ export default function InventoryView({
 
   // Summaries
   const totalIngredients = localInventory.length;
-  const healthyCount = localInventory.filter(i => i.currentQty > i.reorderLevel).length;
-  const outOfStockCount = localInventory.filter(i => i.currentQty === 0).length;
+  const healthyCount = localInventory?.filter(i => i.currentQty > i.reorderLevel).length;
+  const outOfStockCount = localInventory?.filter(i => i.currentQty === 0).length;
   const lowStockCount = totalIngredients - healthyCount - outOfStockCount;
-  const totalValue = localInventory.reduce((acc, i) => acc + (i.currentQty * i.unitPrice), 0);
+  const totalValue = localInventory?.reduce((acc, i) => acc + (i.currentQty * i.unitPrice), 0);
 
   // Filtering & Sorting
-  let filteredData = localInventory.filter(item => {
+  let filteredData = localInventory?.filter(item => {
     const safeSearchQuery = (searchQuery || "").toLowerCase();
     const safeName = (item.name || "").toLowerCase();
     const safeSupplier = (item.supplierName || "").toLowerCase();
@@ -309,7 +309,7 @@ export default function InventoryView({
     return matchesSearch && matchesStatus && matchesCat && matchesSupplier;
   });
 
-  filteredData.sort((a, b) => {
+  filteredData?.sort((a, b) => {
     if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
     if (sortBy === "stock") return (b.currentQty || 0) - (a.currentQty || 0);
     if (sortBy === "supplier") return (a.supplierName || "").localeCompare(b.supplierName || "");
@@ -424,7 +424,7 @@ export default function InventoryView({
             className="bg-warm-bg border border-warm-border text-text-sec text-xs font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-forest-accent"
           >
             <option value="All">All Categories</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            {CATEGORIES?.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
           <select
@@ -433,7 +433,7 @@ export default function InventoryView({
             className="bg-warm-bg border border-warm-border text-text-sec text-xs font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-forest-accent"
           >
             <option value="All">All Suppliers</option>
-            {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
+            {suppliers?.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
           </select>
 
           <select 
@@ -484,7 +484,7 @@ export default function InventoryView({
                   </td>
                 </tr>
               ) : (
-                filteredData.map(item => {
+                filteredData?.map(item => {
                   const isOut = item.currentQty === 0;
                   const isLow = !isOut && item.currentQty <= item.reorderLevel;
                   const value = item.currentQty * item.unitPrice;
@@ -634,14 +634,14 @@ export default function InventoryView({
                 <div>
                   <label className="block text-xs font-bold text-text-sec mb-1.5">Category</label>
                   <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-warm-bg border border-warm-border rounded-xl px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none transition-colors">
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {CATEGORIES?.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-sec mb-1.5">Supplier</label>
                   <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className="w-full bg-warm-bg border border-warm-border rounded-xl px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none transition-colors">
                     <option value="">Select Supplier</option>
-                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
+                    {suppliers?.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
                   </select>
                 </div>
                 <div>
@@ -651,7 +651,7 @@ export default function InventoryView({
                 <div>
                   <label className="block text-xs font-bold text-text-sec mb-1.5">Unit</label>
                   <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full bg-warm-bg border border-warm-border rounded-xl px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none transition-colors">
-                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                    {UNITS?.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
                 <div>
@@ -742,58 +742,60 @@ export default function InventoryView({
               <button onClick={() => setIsHistoryModalOpen(false)} className="text-text-sec hover:text-text-main transition-colors"><X className="w-5 h-5"/></button>
             </div>
             <div className="flex-1 overflow-y-auto p-0">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-warm-bg/80 text-text-sec font-semibold text-[11px] uppercase tracking-wider sticky top-0">
-                  <tr>
-                    <th className="px-5 py-3">Date & Time</th>
-                    <th className="px-5 py-3">Type</th>
-                    <th className="px-5 py-3 font-mono">Amount</th>
-                    <th className="px-5 py-3 w-full">Reason</th>
-                    <th className="px-5 py-3 font-mono text-right">Remaining</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-warm-border/50">
-                  {historyData.length === 0 ? (
-                    <tr><td colSpan={5} className="px-5 py-8 text-center text-text-muted">No transaction history.</td></tr>
-                  ) : (
-                    historyData.map((record, index) => {
-                      let remaining = historyItem.currentQty;
-                      for (let i = 0; i < index; i++) {
-                        if (historyData[i].type === 'IN') remaining -= historyData[i].amount;
-                        else remaining += historyData[i].amount;
-                      }
-                      
-                      return (
-                      <tr key={record.id} className="hover:bg-warm-card/30">
-                        <td className="px-5 py-3.5 text-text-sec font-mono text-xs">
-                          {new Date(record.timestamp).toLocaleString()}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          {record.type === "IN" ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
-                              <ArrowUpCircle className="w-3 h-3"/> IN
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-red-400 bg-red-500/10 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
-                              <ArrowDownCircle className="w-3 h-3"/> OUT
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 font-mono font-bold text-zinc-200">
-                          {record.type === 'IN' ? '+' : '-'}{record.amount} {historyItem?.unit}
-                        </td>
-                        <td className="px-5 py-3.5 text-text-sec text-xs">
-                          {record.reason}
-                        </td>
-                        <td className="px-5 py-3.5 font-mono font-bold text-forest-accent text-right">
-                          {remaining} {historyItem?.unit}
-                        </td>
-                      </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-warm-bg/80 text-text-sec font-semibold text-[11px] uppercase tracking-wider sticky top-0">
+                    <tr>
+                      <th className="px-5 py-3">Date & Time</th>
+                      <th className="px-5 py-3">Type</th>
+                      <th className="px-5 py-3 font-mono">Amount</th>
+                      <th className="px-5 py-3 w-full">Reason</th>
+                      <th className="px-5 py-3 font-mono text-right">Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-warm-border/50">
+                    {historyData.length === 0 ? (
+                      <tr><td colSpan={5} className="px-5 py-8 text-center text-text-muted">No transaction history.</td></tr>
+                    ) : (
+                      historyData?.map((record, index) => {
+                        let remaining = historyItem.currentQty;
+                        for (let i = 0; i < index; i++) {
+                          if (historyData[i].type === 'IN') remaining -= historyData[i].amount;
+                          else remaining += historyData[i].amount;
+                        }
+                        
+                        return (
+                        <tr key={record.id} className="hover:bg-warm-card/30">
+                          <td className="px-5 py-3.5 text-text-sec font-mono text-xs">
+                            {new Date(record.timestamp).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            {record.type === "IN" ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
+                                <ArrowUpCircle className="w-3 h-3"/> IN
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-red-400 bg-red-500/10 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
+                                <ArrowDownCircle className="w-3 h-3"/> OUT
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 font-mono font-bold text-zinc-200">
+                            {record.type === 'IN' ? '+' : '-'}{record.amount} {historyItem?.unit}
+                          </td>
+                          <td className="px-5 py-3.5 text-text-sec text-xs">
+                            {record.reason}
+                          </td>
+                          <td className="px-5 py-3.5 font-mono font-bold text-forest-accent text-right">
+                            {remaining} {historyItem?.unit}
+                          </td>
+                        </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

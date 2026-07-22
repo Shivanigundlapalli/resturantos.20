@@ -163,8 +163,9 @@ export default function MenuView() {
             <div className="flex-1 flex items-center justify-center text-text-sec">Loading Menu...</div>
           ) : (
             <div className="bg-warm-bg rounded-2xl border border-warm-border shadow-none overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left border-collapse">
+                  <thead>
                   <tr className="border-b border-warm-border bg-warm-bg">
                     <th className="py-3 px-6 text-xs font-semibold text-text-sec uppercase tracking-wider">Dish</th>
                     <th className="py-3 px-6 text-xs font-semibold text-text-sec uppercase tracking-wider">Category</th>
@@ -232,8 +233,9 @@ export default function MenuView() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
