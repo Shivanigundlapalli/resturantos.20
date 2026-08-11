@@ -31,15 +31,15 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
       });
   }, []);
 
-  const categories = ["All", ...Array.from(new Set(menuItems.map(item => item.category)))];
+  const categories = ["All", ...Array.from(new Set(menuItems?.map(item => item.category)))];
   
   // Filter items: search query and availability
-  const displayedItems = menuItems.filter(item => {
+  const displayedItems = menuItems?.filter(item => {
     const isAvailable = item.status !== "Sold Out" && item.status !== "Out Of Stock" && item.status !== "Discontinued";
     if (!isAvailable) return false;
 
     if (searchQuery) {
-      return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return (item.name || "").toLowerCase().includes((searchQuery || "").toLowerCase());
     }
     return activeCategory === "All" ? true : item.category === activeCategory;
   });
@@ -48,7 +48,7 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
     setCart(prev => {
       const existing = prev.find(c => c.id === item.id);
       if (existing) {
-        return prev.map(c => c.cartItemId === existing.cartItemId ? { ...c, cartQuantity: c.cartQuantity + 1 } : c);
+        return prev?.map(c => c.cartItemId === existing.cartItemId ? { ...c, cartQuantity: c.cartQuantity + 1 } : c);
       }
       return [...prev, { ...item, cartItemId: Date.now().toString() + Math.random(), cartQuantity: 1 }];
     });
@@ -56,26 +56,26 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
 
   const handleRemoveFromCart = (itemId: string) => {
     setCart(prev => {
-      const itemVariations = prev.filter(c => c.id === itemId);
+      const itemVariations = prev?.filter(c => c.id === itemId);
       if (itemVariations.length === 0) return prev;
       const targetCartItemId = itemVariations[itemVariations.length - 1].cartItemId;
       const target = prev.find(c => c.cartItemId === targetCartItemId);
       if (target && target.cartQuantity > 1) {
-        return prev.map(c => c.cartItemId === targetCartItemId ? { ...c, cartQuantity: c.cartQuantity - 1 } : c);
+        return prev?.map(c => c.cartItemId === targetCartItemId ? { ...c, cartQuantity: c.cartQuantity - 1 } : c);
       }
-      return prev.filter(c => c.cartItemId !== targetCartItemId);
+      return prev?.filter(c => c.cartItemId !== targetCartItemId);
     });
   };
 
   const getCartQuantity = (itemId: string) => {
-    return cart.filter(c => c.id === itemId).reduce((sum, c) => sum + c.cartQuantity, 0);
+    return cart?.filter(c => c.id === itemId).reduce((sum, c) => sum + c.cartQuantity, 0);
   };
   
-  const cartItemCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
+  const cartItemCount = cart?.reduce((sum, item) => sum + item.cartQuantity, 0);
+  const cartTotal = cart?.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
 
   const getDishImage = (dishName: string) => {
-    const name = dishName.toLowerCase();
+    const name = (dishName || "").toLowerCase();
     if (name.includes("chicken dum biryani")) return "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=800&q=80";
     if (name.includes("veg biryani")) return "https://images.unsplash.com/photo-1589302168068-964664d93cb0?w=800&q=80";
     if (name.includes("mutton")) return "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&q=80";
@@ -116,7 +116,7 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
         </div>
         
         <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x pb-2">
-          {categories.map((cat, idx) => (
+          {categories?.map((cat, idx) => (
             <button
               key={idx}
               onClick={() => setActiveCategory(cat)}
@@ -146,9 +146,9 @@ export default function MenuStep({ cart, setCart, onNext }: MenuStepProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {displayedItems.map((item) => {
+            {displayedItems?.map((item) => {
               const qty = getCartQuantity(item.id);
-              const typeIsVeg = item.isVeg !== undefined ? item.isVeg : (!item.name.toLowerCase().includes('chicken') && !item.name.toLowerCase().includes('mutton') && !item.name.toLowerCase().includes('egg'));
+              const typeIsVeg = item.isVeg !== undefined ? item.isVeg : (!(item.name || "").toLowerCase().includes('chicken') && !(item.name || "").toLowerCase().includes('mutton') && !(item.name || "").toLowerCase().includes('egg'));
               
               return (
                 <div key={item.id} className="bg-warm-bg rounded-3xl p-4 flex gap-4 border border-warm-border shadow-md relative overflow-hidden transition-all hover:border-customer-primary/30">

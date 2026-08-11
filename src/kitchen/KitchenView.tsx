@@ -120,8 +120,8 @@ export default function KitchenView() {
     }
   };
 
-  const activeOrders = Array.isArray(orders) ? orders.filter(o => o.status !== "Served" && o.status !== "Completed" && o.status !== "Cancelled") : [];
-  activeOrders.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const activeOrders = Array.isArray(orders) ? orders?.filter(o => o.status !== "Served" && o.status !== "Completed" && o.status !== "Cancelled") : [];
+  activeOrders?.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   return (
     <div className="w-screen h-screen flex flex-col bg-warm-bg text-text-main font-sans overflow-hidden">
@@ -161,7 +161,7 @@ export default function KitchenView() {
           </div>
         ) : (
           <div className="flex gap-6 h-full items-start">
-            {activeOrders.map(order => (
+            {activeOrders?.map(order => (
               <motion.div 
                 key={order.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -213,7 +213,7 @@ export default function KitchenView() {
                 <div className="p-4 flex-1 overflow-y-auto bg-warm-bg/50">
                   <div className="text-[10px] font-bold text-text-sec uppercase tracking-wider mb-3">Order Items</div>
                   <div className="space-y-3">
-                    {order.items.map((item, idx) => (
+                    {order.items?.map((item, idx) => (
                       <div key={idx} className="flex gap-3 items-start">
                         <div className="bg-lux-border text-text-main font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
                           {item.quantity}

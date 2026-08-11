@@ -18,7 +18,7 @@ export default function CartStep({ cart, setCart, customerName, tableNumber, mob
   const [isSending, setIsSending] = useState(false);
 
   const handleUpdateQuantity = (cartItemId: string, change: number) => {
-    setCart(prev => prev.map(item => {
+    setCart(prev => prev?.map(item => {
       if (item.cartItemId === cartItemId) {
         const newQty = item.cartQuantity + change;
         if (newQty < 1) return item;
@@ -29,10 +29,10 @@ export default function CartStep({ cart, setCart, customerName, tableNumber, mob
   };
 
   const handleRemove = (cartItemId: string) => {
-    setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
+    setCart(prev => prev?.filter(item => item.cartItemId !== cartItemId));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
+  const subtotal = cart?.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
   const tax = Math.round((subtotal * 0.05) * 100) / 100;
   const grandTotal = subtotal + tax;
 
@@ -79,7 +79,7 @@ export default function CartStep({ cart, setCart, customerName, tableNumber, mob
             <h3 className="font-bold text-text-sec text-sm mt-6 mb-2 uppercase tracking-wider">Your Items</h3>
             
             <div className="space-y-3">
-              {cart.map(item => (
+              {cart?.map(item => (
                 <div key={item.cartItemId} className="bg-warm-bg rounded-2xl p-4 border border-warm-border flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div className="font-bold text-text-main text-[15px] pr-2">{item.name}</div>

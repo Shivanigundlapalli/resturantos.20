@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { CreditCard, Banknote, Loader2 } from 'lucide-react';
+import { CreditCard, Banknote, Loader2, CheckCircle2 } from 'lucide-react';
 import { loadRazorpayScript } from '../../lib/razorpay';
 import { CartItem } from '../CustomerApp';
 
@@ -14,8 +14,9 @@ interface PaymentStepProps {
 
 export default function PaymentStep({ cart, customerName, mobileNumber, tableNumber, onOrderCreated }: PaymentStepProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentSimState, setPaymentSimState] = useState<"idle" | "processing" | "success">("idle");
 
-  const subtotal = cart.reduce((sum, item) => {
+  const subtotal = cart?.reduce((sum, item) => {
     let itemPrice = item.price;
     if (item.customizations) {
       if (item.customizations.cheese) itemPrice += 30;
@@ -30,7 +31,7 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
     setIsProcessing(true);
     
     // Combine Special Instructions
-    const itemInstructions = cart.map(item => {
+    const itemInstructions = cart?.map(item => {
       const custs = item.customizations;
       if (!custs || Object.keys(custs).length === 0) return null;
       const parts = Object.entries(custs).filter(([_,v]) => v).map(([_,v]) => v).join(", ");
@@ -41,7 +42,7 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
       customerName: customerName.trim(),
       phone: `+91 ${mobileNumber}`,
       tableOrType: `Table ${tableNumber}`,
-      items: cart.map(item => {
+      items: cart?.map(item => {
         let itemPrice = item.price;
         if (item.customizations) {
           if (item.customizations.cheese) itemPrice += 30;
@@ -93,78 +94,18 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
       return;
     }
 
-    setIsProcessing(true);
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
-      alert("Razorpay SDK failed to load. Are you online?");
-      setIsProcessing(false);
-      return;
-    }
-
-    try {
-      console.log("Creating Razorpay order on backend...");
-      // 1. Create order on the backend
-      const res = await fetch("/api/payment/create-razorpay-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: grandTotal })
-      });
-      const data = await res.json();
-      console.log("Backend response:", data);
+    setPaymentSimState("processing");
+    
+    // Simulate Razorpay processing delay
+    setTimeout(() => {
+      setPaymentSimState("success");
       
-      if (!data.success) {
-        alert("Failed to initialize payment: " + data.message);
-        setIsProcessing(false);
-        return;
-      }
-
-      console.log("Initializing Razorpay checkout...");
-      // 2. Open Razorpay Checkout
-      const options: any = {
-        key: (import.meta as any).env.VITE_RAZORPAY_KEY_ID || "rzp_test_TDlNGuvutaLf6K",
-        amount: data.amount,
-        currency: "INR",
-        name: "Spice Heaven",
-        description: "Order Payment",
-        image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=128&h=128&fit=crop",
-        handler: function (response: any) {
-          console.log("Payment successful:", response);
-          createOrderInDb("Paid", "RAZORPAY");
-        },
-        prefill: {
-          name: customerName,
-          contact: mobileNumber
-        },
-        theme: {
-          color: "#f59e0b"
-        },
-        modal: {
-          ondismiss: function() {
-            console.log("Razorpay modal dismissed");
-            setIsProcessing(false);
-          }
-        }
-      };
-
-      if (!data.isMock && data.order_id) {
-        options.order_id = data.order_id;
-      }
-
-      console.log("Razorpay options:", options);
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
-        console.error("Payment failed:", response.error);
-        alert("Payment failed: " + response.error.description);
-        setIsProcessing(false);
-      });
-      
-      console.log("Opening Razorpay modal...");
-      rzp.open();
-    } catch (err) {
-      console.error("Payment error caught:", err);
-      alert("Network error creating payment order.");
-      setIsProcessing(false);
-    }
+      // Keep success message visible for 1.5 seconds then proceed
+      setTimeout(() => {
+        setPaymentSimState("idle");
+        createOrderInDb("Paid", "RAZORPAY");
+      }, 1500);
+    }, 2000);
   };
 
   return (
@@ -210,6 +151,39 @@ export default function PaymentStep({ cart, customerName, mobileNumber, tableNum
               <div className="text-text-sec text-sm">Cash or Card to waiter</div>
             </div>
           </button>
+        </div>
+      )}
+
+      {paymentSimState !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#041A13]/90 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#0A241C] p-8 rounded-2xl border border-[#1B3629] flex flex-col items-center gap-4 max-w-sm w-full mx-4"
+          >
+            {paymentSimState === "processing" ? (
+              <>
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-[#1B3629] border-t-[#0F8F5B] rounded-full animate-spin"></div>
+                  <Banknote className="w-6 h-6 text-[#0F8F5B] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                </div>
+                <h3 className="text-xl font-bold text-[#FFFFFF]">Processing Payment...</h3>
+                <p className="text-[#8B9D96] text-center text-sm">Please do not close this window or press back.</p>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", bounce: 0.5 }}
+                >
+                  <CheckCircle2 className="w-20 h-20 text-[#0F8F5B]" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-[#0F8F5B]">Payment Completed!</h3>
+                <p className="text-[#8B9D96] text-center text-sm">Your order is being confirmed.</p>
+              </>
+            )}
+          </motion.div>
         </div>
       )}
     </motion.div>

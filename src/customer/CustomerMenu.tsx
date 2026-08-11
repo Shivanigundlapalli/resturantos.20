@@ -56,18 +56,18 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
     };
   }, []);
 
-  const categories = Array.from(new Set(Array.isArray(menuItems) ? menuItems.map(item => item.category) : []));
+  const categories = Array.from(new Set(Array.isArray(menuItems) ? menuItems?.map(item => item.category) : []));
   const isSearching = searchQuery.length > 0;
   
   const displayedItems = (Array.isArray(menuItems) ? menuItems : []).filter(item => {
     if (isSearching) {
-      return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return (item.name || "").toLowerCase().includes((searchQuery || "").toLowerCase());
     }
     return activeCategory ? item.category === activeCategory : false;
   });
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
-  const cartItemCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);
+  const cartTotal = cart?.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
+  const cartItemCount = cart?.reduce((sum, item) => sum + item.cartQuantity, 0);
 
   const openCustomizer = (item: MenuItem) => {
     setCustomizingItem(item);
@@ -86,7 +86,7 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
         JSON.stringify(c.customizations || {}) === JSON.stringify(customOpts || {})
       );
       if (existing) {
-        return prev.map(c => c.cartItemId === existing.cartItemId ? { ...c, cartQuantity: c.cartQuantity + 1 } : c);
+        return prev?.map(c => c.cartItemId === existing.cartItemId ? { ...c, cartQuantity: c.cartQuantity + 1 } : c);
       }
       return [...prev, { ...item, cartItemId: Date.now().toString() + Math.random(), cartQuantity: 1, customizations: customOpts || {} }];
     });
@@ -101,23 +101,23 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
 
   const handleRemoveFromCart = (itemId: string) => {
     setCart(prev => {
-      const itemVariations = prev.filter(c => c.id === itemId);
+      const itemVariations = prev?.filter(c => c.id === itemId);
       if (itemVariations.length === 0) return prev;
       const targetCartItemId = itemVariations[itemVariations.length - 1].cartItemId;
       const target = prev.find(c => c.cartItemId === targetCartItemId);
       if (target && target.cartQuantity > 1) {
-        return prev.map(c => c.cartItemId === targetCartItemId ? { ...c, cartQuantity: c.cartQuantity - 1 } : c);
+        return prev?.map(c => c.cartItemId === targetCartItemId ? { ...c, cartQuantity: c.cartQuantity - 1 } : c);
       }
-      return prev.filter(c => c.cartItemId !== targetCartItemId);
+      return prev?.filter(c => c.cartItemId !== targetCartItemId);
     });
   };
 
   const getCartQuantity = (itemId: string) => {
-    return cart.filter(c => c.id === itemId).reduce((sum, c) => sum + c.cartQuantity, 0);
+    return cart?.filter(c => c.id === itemId).reduce((sum, c) => sum + c.cartQuantity, 0);
   };
 
   const getCategoryImage = (category: string) => {
-    const c = category.toLowerCase();
+    const c = (category || "").toLowerCase();
     if (c.includes("biryani") || c.includes("rice")) return "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80";
     if (c.includes("special") || c.includes("starter") || c.includes("main")) return "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80";
     if (c.includes("dessert") || c.includes("sweet")) return "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&q=80";
@@ -126,7 +126,7 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
   };
 
   const getDishImage = (dishName: string, category: string) => {
-    const name = dishName.toLowerCase();
+    const name = (dishName || "").toLowerCase();
     if (name.includes("chicken dum biryani")) return "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=800&q=80";
     if (name.includes("veg biryani")) return "https://images.unsplash.com/photo-1589302168068-964664d93cb0?w=800&q=80";
     if (name.includes("mutton")) return "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&q=80";
@@ -226,7 +226,7 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {displayedItems.map((item, i) => {
+                    {displayedItems?.map((item, i) => {
                       const qty = getCartQuantity(item.id);
                       const isAvailable = item.status === "Available";
                       
@@ -379,8 +379,8 @@ export default function CustomerMenu({ cart, setCart, onCheckout, customerName, 
                 <div className="mb-6">
                   <h2 className="text-[22px] font-black text-[#F5F5F2] tracking-tight mb-4 pl-1">What are you craving?</h2>
                   <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 snap-x hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {categories.map((cat, i) => {
-                      const count = menuItems.filter(m => m.category === cat).length;
+                    {categories?.map((cat, i) => {
+                      const count = menuItems?.filter(m => m.category === cat).length;
                       return (
                         <motion.button
                           initial={{ opacity: 0, y: 15 }}

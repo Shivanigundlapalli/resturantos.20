@@ -50,7 +50,12 @@ const defaultMenuItems = [
   { id: 'm_2', name: 'Mutton Biryani', category_id: 'cat_1', category: 'Main Course', price: 600, cost: 300, status: 'Available' as const, popularity: 5, isVeg: false, image: 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?q=100&w=1200&auto=format&fit=crop', description: 'Rich and flavorful slow-cooked mutton biryani with aromatic spices.' },
   { id: 'm_3', name: 'Veg Pulao', category_id: 'cat_1', category: 'Main Course', price: 250, cost: 120, status: 'Available' as const, popularity: 4, isVeg: true, image: 'https://images.unsplash.com/photo-1516684732162-798a0062be99?q=100&w=1200&auto=format&fit=crop', description: 'Fragrant basmati rice cooked with fresh seasonal vegetables.' },
   { id: 'm_4', name: 'Paneer Butter Masala', category_id: 'cat_2', category: 'Curry', price: 320, cost: 150, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?q=100&w=1200&auto=format&fit=crop', description: 'Soft paneer cubes simmered in a rich, creamy tomato gravy.' },
-  { id: 'm_5', name: 'Butter Naan', category_id: 'cat_3', category: 'Breads', price: 60, cost: 20, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=100&w=1200&auto=format&fit=crop', description: 'Soft and fluffy Indian flatbread brushed with butter.' }
+  { id: 'm_5', name: 'Butter Naan', category_id: 'cat_3', category: 'Breads', price: 60, cost: 20, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=100&w=1200&auto=format&fit=crop', description: 'Soft and fluffy Indian flatbread brushed with butter.' },
+  { id: 'm_6', name: 'Samosa (2 Pcs)', category_id: 'cat_4', category: 'Starters', price: 80, cost: 30, status: 'Available' as const, popularity: 4, isVeg: true, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=100&w=1200&auto=format&fit=crop', description: 'Crispy pastry filled with spiced potatoes and peas.' },
+  { id: 'm_7', name: 'Gulab Jamun (2 Pcs)', category_id: 'cat_5', category: 'Dessert', price: 100, cost: 40, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?q=100&w=1200&auto=format&fit=crop', description: 'Classic Indian sweet balls soaked in rose-flavored sugar syrup.' },
+  { id: 'm_8', name: 'Rasmalai', category_id: 'cat_5', category: 'Dessert', price: 150, cost: 60, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1589302168068-964664d93cb0?q=100&w=1200&auto=format&fit=crop', description: 'Soft cottage cheese dumplings soaked in sweetened, thickened milk.' },
+  { id: 'm_9', name: 'Mango Lassi', category_id: 'cat_6', category: 'Beverage', price: 120, cost: 50, status: 'Available' as const, popularity: 4, isVeg: true, image: 'https://images.unsplash.com/photo-1550454316-b844b706c8b9?q=100&w=1200&auto=format&fit=crop', description: 'Refreshing yogurt-based drink blended with sweet ripe mangoes.' },
+  { id: 'm_10', name: 'Filter Coffee', category_id: 'cat_6', category: 'Beverage', price: 50, cost: 15, status: 'Available' as const, popularity: 5, isVeg: true, image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=100&w=1200&auto=format&fit=crop', description: 'Authentic South Indian filter coffee served hot and frothy.' }
 ];
 
 const defaultInventory = [
@@ -234,13 +239,7 @@ function startServer() {
   const app = express();
   app.use(express.json());
   
-  // Environment variable check middleware
-  app.use('/api', (req, res, next) => {
-    if (!process.env.DATABASE_URL) {
-      return res.status(500).json({ success: false, error: "DATABASE_URL environment variable is missing in production" });
-    }
-    next();
-  });
+  // Environment variable check middleware removed to allow in-memory fallback
 
   // Static route for uploaded images
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -551,7 +550,7 @@ function startServer() {
   // API Route: Send Business Report
   app.post("/api/reports/send", requireOwner, async (req, res) => {
     try {
-      const result = await generateAndSendBusinessReport();
+      const result = await generateAndSendBusinessReport(dbState);
       res.json(result);
     } catch (err: any) {
       console.error("Failed to send business report:", err);

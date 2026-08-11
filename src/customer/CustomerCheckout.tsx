@@ -44,6 +44,7 @@ export default function CustomerCheckout({
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "CASH">("ONLINE");
   const [isPlacing, setIsPlacing] = useState(false);
+  const [paymentSimState, setPaymentSimState] = useState<"idle" | "processing" | "success">("idle");
 
   // Auto-capitalize First Letters
   useEffect(() => {
@@ -186,39 +187,14 @@ export default function CustomerCheckout({
   };
 
   const initiateRazorpay = async () => {
-    setIsPlacing(true);
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
-      alert("Razorpay SDK failed to load. Are you online?");
-      setIsPlacing(false);
-      return;
-    }
-    
-    const options = {
-      key: (import.meta as any).env.VITE_RAZORPAY_KEY_ID || "rzp_test_TDlNGuvutaLf6K", 
-      amount: Math.round(grandTotal * 100), // paise
-      currency: "INR",
-      name: "Spice Heaven",
-      description: "Order Payment",
-      handler: async function (response: any) {
+    setPaymentSimState("processing");
+    setTimeout(() => {
+      setPaymentSimState("success");
+      setTimeout(async () => {
+        setPaymentSimState("idle");
         await submitOrder("PAID");
-      },
-      prefill: {
-        name: localName,
-        contact: localPhone
-      },
-      theme: {
-        color: "#0F8F5B"
-      },
-      modal: {
-        ondismiss: function() {
-          setIsPlacing(false);
-        }
-      }
-    };
-    
-    const paymentObject = new (window as any).Razorpay(options);
-    paymentObject.open();
+      }, 1500);
+    }, 2000);
   };
 
   const handlePlaceOrder = () => {
@@ -472,6 +448,39 @@ export default function CustomerCheckout({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {paymentSimState !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#041A13]/90 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#0A241C] p-8 rounded-2xl border border-[#1B3629] flex flex-col items-center gap-4 max-w-sm w-full mx-4"
+          >
+            {paymentSimState === "processing" ? (
+              <>
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-[#1B3629] border-t-[#0F8F5B] rounded-full animate-spin"></div>
+                  <Banknote className="w-6 h-6 text-[#0F8F5B] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                </div>
+                <h3 className="text-xl font-bold text-[#FFFFFF]">Processing Payment...</h3>
+                <p className="text-[#8B9D96] text-center text-sm">Please do not close this window or press back.</p>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", bounce: 0.5 }}
+                >
+                  <CheckCircle2 className="w-20 h-20 text-[#0F8F5B]" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-[#0F8F5B]">Payment Completed!</h3>
+                <p className="text-[#8B9D96] text-center text-sm">Your order is being confirmed.</p>
+              </>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

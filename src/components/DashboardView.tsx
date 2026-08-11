@@ -66,7 +66,7 @@ export default function DashboardView({ restaurantState, setActiveTab }: Dashboa
         return;
       }
       
-      alert(`Business Report Sent Successfully\nProvider: ${data.provider || 'System'}`);
+      alert('Business Report Sent Successfully');
     } catch (err: any) {
       console.error("Network/Client Error:", err);
       alert(`Failed to Send Business Report\nError: ${err.message}`);

@@ -398,7 +398,7 @@ export class OrdersRepository {
       // Add to Finances if Paid
       if (orderData.payment_status === "PAID" || orderData.payment_method === "ONLINE") {
         await client.query(`
-          INSERT INTO finances (type, category, amount, description, created_at)
+          INSERT INTO finance_ledger (type, category, amount, description, created_at)
           VALUES ($1, $2, $3, $4, NOW())
         `, ["Income", "Order Revenue", orderData.total, `Order #${newOrderId}`]);
       }
@@ -688,7 +688,7 @@ export class OrdersRepository {
     const res = await query(`
       SELECT id, created_at as timestamp, type, category, 
              CAST(amount AS DOUBLE PRECISION) as amount, description
-      FROM finances
+      FROM finance_ledger
       ORDER BY created_at DESC
     `);
 
@@ -759,7 +759,7 @@ export class OrdersRepository {
     description: string;
   }): Promise<FinanceEntry> {
     const res = await query(`
-      INSERT INTO finances (type, category, amount, description, created_at)
+      INSERT INTO finance_ledger (type, category, amount, description, created_at)
       VALUES ($1, $2, $3, $4, NOW())
       RETURNING id, created_at
     `, [entry.type, entry.category, entry.amount, entry.description]);

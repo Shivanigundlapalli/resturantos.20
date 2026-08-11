@@ -123,7 +123,7 @@ export default function CustomerOrderTracking({ orderId, customerName }: Custome
               ></motion.div>
             )}
 
-            {steps.map((step, index) => {
+            {steps?.map((step, index) => {
               const isActive = index === currentStepIndex;
               const isCompleted = index < currentStepIndex;
               const isPending = index > currentStepIndex;
@@ -157,7 +157,7 @@ export default function CustomerOrderTracking({ orderId, customerName }: Custome
         <div className="bg-warm-bg rounded-3xl p-6 shadow-lg border border-warm-border">
           <h2 className="text-sm font-black uppercase text-text-sec tracking-wider mb-4">Order Summary</h2>
           <div className="space-y-3 mb-4">
-            {order.items.map((item, idx) => (
+            {order.items?.map((item, idx) => (
               <div key={idx} className="flex justify-between items-center text-sm">
                 <span className="font-bold text-text-main">{item.quantity}x {item.name}</span>
                 <span className="font-black text-text-main">₹{(item.price * item.quantity).toFixed(2)}</span>

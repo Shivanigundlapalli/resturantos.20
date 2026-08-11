@@ -16,8 +16,16 @@ export default function OtpStep({ customerName, mobileNumber, onNext, onBack }: 
   const hasSentOTP = useRef(false);
 
   useEffect(() => {
+    const lastSent = sessionStorage.getItem(`otp_sent_${mobileNumber}`);
+    if (lastSent && Date.now() - parseInt(lastSent) < 30000) {
+      // already sent recently in this session (within 30 seconds), prevent double send due to React StrictMode
+      setIsSending(false);
+      return;
+    }
+    
     if (!hasSentOTP.current) {
       hasSentOTP.current = true;
+      sessionStorage.setItem(`otp_sent_${mobileNumber}`, Date.now().toString());
       handleSendOTP();
     }
   }, []);
