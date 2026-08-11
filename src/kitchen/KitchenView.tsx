@@ -16,7 +16,7 @@ export default function KitchenView() {
       return;
     }
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/orders?limit=500", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {

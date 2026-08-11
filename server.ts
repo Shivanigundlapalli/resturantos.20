@@ -237,6 +237,13 @@ function startServer() {
   }
 
   const app = express();
+  app.use((req: any, res, next) => {
+    // Prevent body-parser from hanging on Vercel where req.body is already parsed
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      req._body = true;
+    }
+    next();
+  });
   app.use(express.json());
   
   // Environment variable check middleware removed to allow in-memory fallback
